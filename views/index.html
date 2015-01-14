@@ -56,7 +56,7 @@
 </nav>
 <ul class="list-group" style="width: 100%;">
     % for data in datas:
-        <li class="list-group-item" style="line-height: 33px; height: 56px;">
+        <li class="list-group-item" style="line-height: 33px; min-height: 56px;">
             <div class="btn-group pull-right" role="group">
                 <button type="button" class="btn btn-default" onclick="look('${data.avid}','${data.filename}')">
                     <span class="glyphicon glyphicon-eye-open"></span>
@@ -84,13 +84,18 @@
         </li>
     % endfor
 </ul>
-% if datas:
-    <small>共有 ${len(datas)} / ${maxlen} 个文件。空间满后，靠前的文件会被优先删除。</small>
-% else:
-    <div class="alert alert-info">
-        <span class="glyphicon glyphicon-inbox"></span>&nbsp;没有文件
-    </div>
-% endif
+<div style="padding-left: 5px; padding-right: 5px;">
+    % if datas:
+        <small>
+            共有 ${len(datas)} / ${maxlen} 个文件。空间满后，靠前的文件会被优先删除。
+        </small>
+    % else:
+        <div class="alert alert-info">
+            <span class="glyphicon glyphicon-inbox"></span>&nbsp;&nbsp;没有分享的文件
+        </div>
+    % endif
+    <a class="pull-right" href="https://github.com/xmcp/ezshare" target="_blank">by xmcp</a>
+</div>
 
 <!-- look modal -->
 <div class="modal fade" id="look-modal">

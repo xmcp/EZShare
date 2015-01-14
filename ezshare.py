@@ -10,7 +10,7 @@ from mako.template import Template
 import time
 
 def err(s):
-    return Template(filename=vp+'err.html',input_encoding='utf-8').render(err=s)
+    return Template(filename=vp+'err.html',input_encoding='utf-8').render(err=str(s))
 
 def proctime(timein):
     if ':' in timein: # xx : yy
@@ -59,7 +59,13 @@ class EZshare:
     def up(self,avid=None,file=None,upfile=None,uptext=None,strtime=None):
         if file is None or avid is None or strtime is None:
             return Template(filename=vp+'up.html',input_encoding='utf-8').render()
-        dietime=int(time.time())+proctime(strtime)
+        try:
+            dietime=int(time.time())+proctime(strtime)
+        except Exception as e:
+            return err('时间无效: %s'%e)
+        for data in self.datas:
+            if data.avid==avid:
+                return err('AVID Exist.')
         if dietime-time.time()>(24*60*60):
             return err('Time Too Long.')
         if not avid.replace('_','').replace('-','').isalnum():
