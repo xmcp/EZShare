@@ -32,10 +32,22 @@
         <div class="col-sm-6"><div class="input-group">
             <span class="input-group-addon"><span class="glyphicon glyphicon-filter"></span></span>
             <input class="form-control" name="avid" required="required" placeholder="AVID" autofocus="autofocus">
+            <span class="input-group-btn">
+                <button type="button" class="btn btn-default"
+                        onclick="alert('使用简短的词语描述你分享的文件。\n不能包含除下划线、横杠外的特殊符号。')">
+                    ?
+                </button>
+            </span>
         </div></div>
         <div class="col-sm-6"><div class="input-group">
             <span class="input-group-addon"><span class="glyphicon glyphicon-time"></span></span>
             <input class="form-control" name="strtime" required="required" placeholder="分享时间">
+            <span class="input-group-btn">
+                <button type="button" class="btn btn-default"
+                        onclick="alert('格式为“分钟数”、“小时数h 分钟数m”或“小时数 : 分钟数”。\n时间不能超过24h，文件会在到期后自动删除。')">
+                    ?
+                </button>
+            </span>
         </div></div>
     </div></div>
     <div class="input-group"><!-- file -->

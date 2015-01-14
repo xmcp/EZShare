@@ -3,6 +3,7 @@ import os
 vp='%s/views/'%os.getcwd().replace('\\','/')
 SAFETIME=600
 MAXSIZE=50*1024*1024
+MAXLEN=10
 
 import cherrypy
 from mako.template import Template
@@ -28,8 +29,8 @@ def proctime(timein):
         return h*3600+m*60
     else: # yy
         if timein[-1]=='m':
-            timein=timein[-1]
-        return int(timein.strip())*60
+            timein=timein[:-1]
+        return int(timein.rstrip())*60
 
 
 class File:
@@ -40,19 +41,19 @@ class File:
         self.dietime=dietime
 
 class EZshare:
-    datas=[File(filename='Welcome_to_EZShare.txt',avid='Hello',content=b'Hello World!',dietime=int(time.time())+3600)]
+    datas=[File(filename='Welcome to EZShare.txt',avid='Hello-World',content=b'Hello World!',dietime=int(time.time())+60)]
 
     def _refresh(self):
         for ind,data in enumerate(self.datas):
             if data.dietime<time.time():
                 del self.datas[ind]
-        if len(self.datas)>10:
+        if len(self.datas)>MAXLEN:
             del self.datas[:len(self.datas)-10]
 
     @cherrypy.expose()
     def index(self):
         self._refresh()
-        return Template(filename=vp+'index.html',input_encoding='utf-8').render(datas=self.datas,safetime=SAFETIME)
+        return Template(filename=vp+'index.html',input_encoding='utf-8').render(datas=self.datas,safetime=SAFETIME,maxlen=MAXLEN)
 
     @cherrypy.expose()
     def up(self,avid=None,file=None,upfile=None,uptext=None,strtime=None):
@@ -61,6 +62,8 @@ class EZshare:
         dietime=int(time.time())+proctime(strtime)
         if dietime-time.time()>(24*60*60):
             return err('Time Too Long.')
+        if not avid.replace('_','').replace('-','').isalnum():
+            return err('Invalid AVID.')
         if file=='yes':
             filename=upfile.filename
             content=upfile.file.read()
@@ -79,7 +82,7 @@ class EZshare:
         for data in self.datas:
             if data.avid==avid:
                 if data.dietime<time.time()+SAFETIME:
-                    data.dietime=time.time()+900
+                    data.dietime+=900
         raise cherrypy.HTTPRedirect('/')
 
     @cherrypy.expose()
@@ -94,6 +97,9 @@ class EZshare:
                 return data.content
         return err('Cannot find file.')
 
-
-cherrypy.config.update({'engine.autoreload.on':False})
+cherrypy.config.update({
+    'engine.autoreload.on':False,
+    'server.socket_host':'0.0.0.0',
+    'server.socket_port':7676,
+})
 cherrypy.quickstart(EZshare(),'')

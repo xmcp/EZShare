@@ -14,9 +14,20 @@
     <title>EZshare</title>
     <script>
         function look(avid,fname) {
+            var timeobj=$('#timebar-'+avid)
+            var timesbj=$('#look-modal-time')
             $('#look-modal-avid').html(avid);
             $('#look-modal-title').html(fname);
-            $('#look-modal-body').attr('src','/s?view=1&wd='+avid)
+            $('#look-modal-body').attr('src','/s?view=1&wd='+avid);
+            timesbj.html(timeobj.html());
+            if(timeobj.attr('disabled')) {
+                timesbj.attr('disabled', 'disabled');
+                timesbj.removeClass('btn-warning').addClass('btn-default');
+            }
+            else {
+                timesbj.removeAttr('disabled');
+                timesbj.addClass('btn-warning').removeClass('btn-default');
+            }
             $('#look-modal').modal('show');
         }
         function down(avid) {
@@ -45,7 +56,7 @@
 </nav>
 <ul class="list-group" style="width: 100%;">
     % for data in datas:
-        <li class="list-group-item" style="line-height: 33px; height: 56px;" onclick="look('${data.avid}','${data.filename}')">
+        <li class="list-group-item" style="line-height: 33px; height: 56px;">
             <div class="btn-group pull-right" role="group">
                 <button type="button" class="btn btn-default" onclick="look('${data.avid}','${data.filename}')">
                     <span class="glyphicon glyphicon-eye-open"></span>
@@ -55,21 +66,32 @@
                     <span class="glyphicon glyphicon-floppy-save"></span>
                     &nbsp;下载
                 </button>
-                <button class="btn btn-${'default' if data.dietime-time.time()>safetime else 'warning'}"
-                        type="button" onclick="renew('${data.avid}')">
+                <% timetogo=int(data.dietime-time.time()) %>
+                <button type="button" onclick="renew('${data.avid}')" id="timebar-${data.avid}"
+                        class="btn btn-${'default' if timetogo>safetime else 'warning'}"
+                        ${'' if timetogo<safetime else 'disabled=disabled'}">
                     <span class="glyphicon glyphicon-flash"></span>
-                    <% timetogo=int(data.dietime-time.time()) %>
                     <b>${timetogo//3600}:${'%02d'%(timetogo//60%60)}</b>
                 </button>
             </div>
-            <b>${data.avid}</b>&nbsp;
-            <span class="label label-default">
-                <span class="glyphicon glyphicon-file"></span>
-                ${data.filename}
-            </span>
+            <a href="#" style="text-decoration: none" onclick="look('${data.avid}','${data.filename}')">
+                <b>${data.avid}</b>&nbsp;
+                <span class="label label-default">
+                    <span class="glyphicon glyphicon-file"></span>
+                    ${data.filename}
+                </span>
+            </a>
         </li>
     % endfor
 </ul>
+% if datas:
+    <small>共有 ${len(datas)} / ${maxlen} 个文件。空间满后，靠前的文件会被优先删除。</small>
+% else:
+    <div class="alert alert-info">
+        <span class="glyphicon glyphicon-inbox"></span>&nbsp;没有文件
+    </div>
+% endif
+
 <!-- look modal -->
 <div class="modal fade" id="look-modal">
     <div class="modal-dialog">
@@ -85,7 +107,7 @@
                 <iframe style="width: 100%; height: 300px; border: 0px;" id="look-modal-body"></iframe>
             </div>
             <div class="modal-footer">
-                <button type="button" class="btn btn-default" data-dismiss="modal" onclick="renew_this()">续期</button>
+                <button type="button" class="btn btn-default" id="look-modal-time" onclick="renew_this()">续期</button>
                 <button type="button" class="btn btn-primary" onclick="down_this()">下载</button>
             </div>
         </div>
