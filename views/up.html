@@ -28,18 +28,22 @@
     </div>
 </nav>
 <form action="/up" method="post" enctype="multipart/form-data">
-    <input class="form-control" style="width: 100%" name="avid" required="required" placeholder="项目编号">
-    <br />
-    <div class="panel panel-default">
-        <div class="panel-heading"><h3 class="panel-title">上传文件</h3></div>
-        <div class="panel-body">
-            <div class="input-group"><!-- file -->
-                <span class="input-group-addon"><span class="glyphicon glyphicon-file"></span></span>
-                <input class="form-control" type="file" name="upfile">
-                <span class="input-group-btn"><button class="btn btn-primary" type="submit" name="file" value="yes">上传</button></span>
-            </div>
-        </div>
+    <div class="well well-sm"><div class="row">
+        <div class="col-sm-6"><div class="input-group">
+            <span class="input-group-addon"><span class="glyphicon glyphicon-filter"></span></span>
+            <input class="form-control" name="avid" required="required" placeholder="AVID" autofocus="autofocus">
+        </div></div>
+        <div class="col-sm-6"><div class="input-group">
+            <span class="input-group-addon"><span class="glyphicon glyphicon-time"></span></span>
+            <input class="form-control" name="strtime" required="required" placeholder="分享时间">
+        </div></div>
+    </div></div>
+    <div class="input-group"><!-- file -->
+        <span class="input-group-addon"><span class="glyphicon glyphicon-file"></span>&nbsp;上传文件&nbsp;≤50M</span>
+        <input class="form-control" type="file" name="upfile">
+        <span class="input-group-btn"><button class="btn btn-primary" type="submit" name="file" value="yes">上传</button></span>
     </div>
+    <br />
     <div class="panel panel-default">
         <div class="panel-heading"><h3 class="panel-title">提交文本</h3></div>
         <div class="panel-body">
