@@ -3,6 +3,7 @@ import os
 vp='%s/views/'%os.getcwd().replace('\\','/')
 SAFETIME=600
 MAXSIZE=50*1024*1024
+MAXALLSIZE=250*1024*1024
 MAXLEN=10
 
 import cherrypy
@@ -32,28 +33,60 @@ def proctime(timein):
             timein=timein[:-1]
         return int(timein.rstrip())*60
 
+class FS:
+    files=[]
+    size=0
+
+    def addfile(self,avid,filename,content,dietime,istext):
+        for file in self.files:
+            if file.avid==avid:
+                raise RuntimeError('AVID Exist.')
+        if len(self.files)==MAXLEN:
+            del self.files[0]
+        self.files.append(File(avid,filename,content,dietime,istext))
+        self.size+=len(content)
+
+    def rmfile(self,avid):
+        for ind,file in enumerate(self.files):
+            if file.avid==avid:
+                self.size-=len(file.content)
+                del self.files[ind]
+                return
+
+    def getfile(self,avid):
+        for file in self.files:
+            if file.avid==avid:
+                return file
+        return False
+
+    def __len__(self):
+        return len(self.files)
 
 class File:
-    def __init__(self,avid,filename,content,dietime):
+    def __init__(self,avid,filename,content,dietime,istext):
         self.avid=avid
         self.filename=filename
         self.content=content
         self.dietime=dietime
+        self.istext=istext
+
+    def __bool__(self):
+        return True
 
 class EZshare:
-    datas=[File(filename='Welcome to EZShare.txt',avid='Hello-World',content=b'Hello World!',dietime=int(time.time())+60)]
+    datas=FS()
+    #datas.addfile(filename='Welcome to EZShare.txt',avid='Hello-World',content=b'Hello World!',dietime=int(time.time())+60,istext=False)
 
     def _refresh(self):
-        for ind,data in enumerate(self.datas):
-            if data.dietime<time.time():
-                del self.datas[ind]
-        if len(self.datas)>MAXLEN:
-            del self.datas[:len(self.datas)-10]
+        for file in self.datas.files:
+            if file.dietime<time.time():
+                self.datas.rmfile(file.avid)
 
     @cherrypy.expose()
     def index(self):
         self._refresh()
-        return Template(filename=vp+'index.html',input_encoding='utf-8').render(datas=self.datas,safetime=SAFETIME,maxlen=MAXLEN)
+        t=Template(filename=vp+'index.html',input_encoding='utf-8')
+        return t.render(datas=self.datas.files,safetime=SAFETIME,maxlen=MAXLEN,maxallsize=MAXALLSIZE,size=self.datas.size)
 
     @cherrypy.expose()
     def up(self,avid=None,file=None,upfile=None,uptext=None,strtime=None):
@@ -63,9 +96,8 @@ class EZshare:
             dietime=int(time.time())+proctime(strtime)
         except Exception as e:
             return err('时间无效: %s'%e)
-        for data in self.datas:
-            if data.avid==avid:
-                return err('AVID Exist.')
+        if self.datas.getfile(avid):
+            return err('AVID Exist.')
         if dietime-time.time()>(24*60*60):
             return err('Time Too Long.')
         if not avid.replace('_','').replace('-','').isalnum():
@@ -80,28 +112,43 @@ class EZshare:
             return err('Invalid File Parameter.')
         if len(content)>MAXSIZE:
             return err('File too big.')
-        self.datas.append(File(avid=avid,filename=filename,content=content,dietime=dietime))
+        try:
+            assert(content.decode().isprintable())
+        except: #bin file
+            istext=False
+        else:
+            istext=True
+        self.datas.addfile(avid=avid,filename=filename,content=content,dietime=dietime,istext=istext)
+        self._refresh()
         raise cherrypy.HTTPRedirect('/')
 
     @cherrypy.expose()
     def renew(self,avid):
-        for data in self.datas:
-            if data.avid==avid:
-                if data.dietime<time.time()+SAFETIME:
-                    data.dietime+=900
+        item=self.datas.getfile(avid)
+        if item:
+            if item.dietime<time.time()+SAFETIME:
+                item.dietime+=900
         raise cherrypy.HTTPRedirect('/')
 
     @cherrypy.expose()
-    def s(self,wd,view=False):
-        for data in self.datas:
-            if data.avid==wd:
-                if view:
+    def s(self,wd,mode='down'):
+        data=self.datas.getfile(wd)
+        if data:
+            if mode=='text':
+                if data.istext: #text file
                     cherrypy.response.headers['Content-Type']='text/plain'
-                else:
-                    cherrypy.response.headers['Content-Type']='application/x-download'
-                    cherrypy.response.headers['Content-Disposition']='attachment; filename="%s"'%data.filename
+                    return data.content
+                else: #binary file
+                    return Template(filename=vp+'binconfirm.html',input_encoding='utf-8').render(avid=wd)
+            elif mode=='down':
+                cherrypy.response.headers['Content-Type']='application/x-download'
+                cherrypy.response.headers['Content-Disposition']='attachment; filename="%s"'%data.filename
                 return data.content
-        return err('Cannot find file.')
+            elif mode=='raw':
+                del cherrypy.response.headers['Content-Type']
+                return data.content
+        else:
+            return err('Cannot find file.')
 
 cherrypy.config.update({
     'engine.autoreload.on':False,
