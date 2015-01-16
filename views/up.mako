@@ -41,7 +41,7 @@
         </div></div>
         <div class="col-sm-6"><div class="input-group">
             <span class="input-group-addon"><span class="glyphicon glyphicon-time"></span></span>
-            <input class="form-control" name="strtime" required="required" placeholder="分享时间" tabindex="1001">
+            <input class="form-control" name="strtime" required="required" placeholder="分享时间" value="1h" tabindex="1001">
             <span class="input-group-btn">
                 <button type="button" class="btn btn-default"
                         onclick="alert('格式为“分钟数”、“小时数h 分钟数m”或“小时数 : 分钟数”。\n时间不能超过24h，文件会在到期后自动删除。')">

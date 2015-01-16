@@ -35,6 +35,10 @@
         function renew(avid) {
             window.location.assign('/renew?avid='+avid)
         }
+        function del(avid) {
+            if(confirm('确定要删除 '+avid+' 吗？'))
+                window.location.assign('/delete?avid='+avid)
+        }
         function renew_this() {renew($('#look-modal-avid').html());}
         function down_this() {down($('#look-modal-avid').html());}
     </script>
@@ -57,6 +61,12 @@
     % for data in datas:
         <li class="list-group-item" style="line-height: 33px; min-height: 56px;">
             <div class="btn-group pull-right" role="group">
+                % if data.fid in control:
+                    <button type="button" class="btn btn-danger" onclick="del('${data.avid}')">
+                        <span class="glyphicon glyphicon-trash"></span>
+                        <span class="hidden-xs">&nbsp;删除</span>
+                    </button>
+                % endif
                 <button type="button" class="btn btn-default" onclick="look('${data.avid}','${data.filename}')">
                     <span class="glyphicon glyphicon-eye-open"></span>
                     <span class="hidden-xs">&nbsp;查看</span>
@@ -93,7 +103,8 @@
         <div class="row">
             <div class="col-sm-4">
                 <div class="progress" style="margin-bottom: 0 !important;">
-                    <div class="progress-bar" style="width: ${100*len(datas)/maxlen}%;"></div>
+                    <div class="progress-bar ${'' if maxlen-len(datas)>1 else 'progress-bar-warning'}"
+                         style="width: ${100*len(datas)/maxlen}%;"></div>
                 </div>
                 <p class="small" style="position: relative; top: -18px; left: 5px; text-align: center">
                     ${len(datas)} 个文件
@@ -101,7 +112,8 @@
             </div>
             <div class="col-sm-4">
                 <div class="progress" style="margin-bottom: 0 !important;">
-                    <div class="progress-bar" style="width: ${100*size/maxallsize}%;"></div>
+                    <div class="progress-bar ${'' if maxallsize-size>50*1024*1024 else 'progress-bar-warning'}"
+                         style="width: ${100*size/maxallsize}%;"></div>
                 </div>
                 <p class="small" style="position: relative; top: -18px; left: 5px; text-align: center">
                     共 ${'%.2f'%(size/1024/1024)} MB
