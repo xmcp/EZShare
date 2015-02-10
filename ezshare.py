@@ -100,7 +100,7 @@ class EZshare:
                         size=self.datas.size,control=cherrypy.session['control'])
 
     @cherrypy.expose()
-    def up(self,avid=None,file=None,upfile=None,uptext=None,strtime=None):
+    def up(self,avid=None,file=None,upfile=None,uptext=None,strtime=None,xhr=None):
         if file is None or avid is None or strtime is None:
             return Template(filename=vp+'up.mako',input_encoding='utf-8').render()
         if 'control' not in cherrypy.session:
@@ -136,7 +136,10 @@ class EZshare:
             istext=True
         self._refresh()
         self.datas.addfile(avid=avid,filename=filename,content=content,dietime=dietime,istext=istext)
-        raise cherrypy.HTTPRedirect('/')
+        if xhr:
+            return 'OK'
+        else:
+            raise cherrypy.HTTPRedirect('/')
 
     @cherrypy.expose()
     def renew(self,avid):

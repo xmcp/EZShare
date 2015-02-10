@@ -10,7 +10,55 @@
         <script src="https://oss.maxcdn.com/html5shiv/3.7.2/html5shiv.min.js"></script>
         <script src="https://oss.maxcdn.com/respond/1.4.2/respond.min.js"></script>
     <![endif]-->
-    <title>EZShare</title>
+    <title>上传 - EZShare</title>
+    <script>
+        function upload() {
+            try {FormData;}
+            catch(_) { //fuck IE
+                document.getElementById('iesubmit').click();
+                return;
+            }
+            window.uploadbtn=document.getElementById('uploadbtn');
+            function progress_callback(event) {
+                var percent = Math.round(event.loaded*100/event.total);
+                uploadbtn.innerText='上传 '+percent.toString()+'%';
+            }
+            function complete_callback(event) {
+                uploadbtn.innerText='上传完毕';
+                if(event.target.responseText==="OK")
+                    window.location.assign('/');
+                else
+                    document.write(event.target.responseText);
+            }
+            function failed_callback() {
+                uploadbtn.removeAttribute('disabled');
+                uploadbtn.innerText='上传失败';
+            }
+            function cancel_callback() {
+                uploadbtn.removeAttribute('disabled');
+                uploadbtn.innerText='上传取消';
+            }
+            var xhr=new XMLHttpRequest();
+            var fd=new FormData();
+            var file=document.getElementById('filein').files[0];
+            if(file.size>50*1024*1024) {
+                alert('文件不得超过50M');
+                return;
+            }
+            fd.append("xhr","yes");
+            fd.append("file","yes");
+            fd.append("upfile",file);
+            fd.append("avid",document.getElementsByName('avid')[0].value);
+            fd.append("strtime",document.getElementsByName('strtime')[0].value);
+            xhr.upload.addEventListener("progress",progress_callback,false);
+            xhr.addEventListener("load",complete_callback,false);
+            xhr.addEventListener("error",failed_callback,false);
+            xhr.addEventListener("abort",cancel_callback,false);
+            xhr.open("POST", "/up");
+            uploadbtn.setAttribute('disabled','disabled');
+            xhr.send(fd);
+        }
+    </script>
 </head>
 <body style="background-color: #DDD">
 <div class="container">
@@ -52,14 +100,17 @@
     </div></div>
     <div class="input-group"><!-- file -->
         <span class="input-group-addon"><span class="glyphicon glyphicon-file"></span>&nbsp;上传文件&nbsp;≤50M</span>
-        <input class="form-control" type="file" name="upfile">
-        <span class="input-group-btn"><button class="btn btn-primary" type="submit" name="file" value="yes">上传</button></span>
+        <input id="filein" class="form-control" type="file" name="upfile">
+        <span class="input-group-btn">
+          <button id="uploadbtn" class="btn btn-primary" type="button" onclick="upload()" name="file" value="yes">上传</button>
+        </span>
     </div>
+    <button id="iesubmit" style="display: none" type="submit" name="file" value="yes">手动上传</button>
     <br />
     <div class="panel panel-default">
         <div class="panel-heading"><h3 class="panel-title">上传文本</h3></div>
         <div class="panel-body">
-            <textarea class="form-control" style="height: 250px;" name="uptext" tabindex="1002"></textarea>
+            <textarea class="form-control" style="height: 250px;" name="uptext" tabindex="1002" placeholder=""></textarea>
             <br />
             <button class="btn btn-primary" style="width: 100%;margin-top: -6px;"
                     type="submit" name="file" value="no" tabindex="1003">
