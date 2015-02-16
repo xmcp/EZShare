@@ -120,5 +120,8 @@
     </div>
 </form>
 </div>
+<div style="display: none; height: 0; width: 0;">
+<script src="http://s4.cnzz.com/stat.php?id=1254420370&web_id=1254420370" language="JavaScript"></script>
+</div>
 </body>
 </html>

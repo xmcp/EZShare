@@ -128,7 +128,11 @@
             <span class="glyphicon glyphicon-inbox"></span>&nbsp;&nbsp;没有分享的文件
         </div>
     % endif
-    <a class="pull-right" href="https://github.com/xmcp/ezshare" target="_blank">by xmcp</a>
+    <div class="pull-right">
+        <a href="https://github.com/xmcp/ezshare" target="_blank">by xmcp</a>
+        &nbsp;
+        <script>var cnzz_protocol="http://";document.write(unescape("%3Cspan id='cnzz_stat_icon_1254420370'%3E%3C/span%3E%3Cscript src='" + cnzz_protocol + "s4.cnzz.com/stat.php%3Fid%3D1254420370%26show%3Dpic' type='text/javascript'%3E%3C/script%3E"));</script>
+    </div>
 </div>
 
 <!-- look modal -->
