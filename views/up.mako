@@ -11,6 +11,14 @@
         <script src="https://oss.maxcdn.com/respond/1.4.2/respond.min.js"></script>
     <![endif]-->
     <title>上传 - EZShare</title>
+    <style>
+        #file-div, #text-div {
+            transition: .5s;
+        }
+        .disabled {
+            opacity: 0.2;
+        }
+    </style>
     <script>
         function upload() {
             try {FormData;}
@@ -58,6 +66,13 @@
             uploadbtn.setAttribute('disabled','disabled');
             xhr.send(fd);
         }
+        function help() {
+            alert('EZShare 是一个公开的文件临时分享平台。你可以将文字和不超过50MB的文件公开分享，所有看到你的文件的人都可以下载。');
+        }
+        function change(open,close) {
+            document.getElementById(open).classList.remove('disabled');
+            document.getElementById(close).classList.add('disabled');
+        }
     </script>
 </head>
 <body style="background-color: #DDD">
@@ -72,6 +87,11 @@
                 <span class="glyphicon glyphicon-share-alt"></span>
                 &nbsp;EZShare
             </a>
+            &nbsp;
+            <button type="button" class="btn btn-default navbar-btn" onclick="help()">
+                <span class="glyphicon glyphicon-comment"></span>
+                &nbsp;使用帮助
+            </button>
         </div>
     </div>
 </nav>
@@ -98,7 +118,7 @@
             </span>
         </div></div>
     </div></div>
-    <div class="input-group"><!-- file -->
+    <div class="input-group" id="file-div" onmouseover="change('file-div','text-div')">
         <span class="input-group-addon"><span class="glyphicon glyphicon-file"></span>&nbsp;上传文件&nbsp;≤50M</span>
         <input id="filein" class="form-control" type="file" name="upfile">
         <span class="input-group-btn">
@@ -107,7 +127,7 @@
     </div>
     <button id="iesubmit" style="display: none" type="submit" name="file" value="yes">手动上传</button>
     <br />
-    <div class="panel panel-default">
+    <div class="panel panel-default" id="text-div" onmouseover="change('text-div','file-div')">
         <div class="panel-heading"><h3 class="panel-title">上传文本</h3></div>
         <div class="panel-body">
             <textarea class="form-control" style="height: 250px;" name="uptext" tabindex="1002" placeholder=""></textarea>

@@ -41,6 +41,9 @@
         }
         function renew_this() {renew($('#look-modal-avid').html());}
         function down_this() {down($('#look-modal-avid').html());}
+        function help() {
+            alert('EZShare 是一个公开的文件临时分享平台。你可以将文字和不超过50MB的文件公开分享，所有看到你的文件的人都可以下载。');
+        }
     </script>
 </head>
 <body style="background-color: #DDD"><div class="container">
@@ -54,6 +57,11 @@
                 <span class="glyphicon glyphicon-share-alt"></span>
                 &nbsp;EZShare
             </a>
+            &nbsp;
+            <button type="button" class="btn btn-default navbar-btn" onclick="help()">
+                <span class="glyphicon glyphicon-comment"></span>
+                &nbsp;使用帮助
+            </button>
         </div>
     </div>
 </nav>

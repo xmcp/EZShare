@@ -1,7 +1,8 @@
 #coding=utf-8
 import os
 vp='%s/views/'%os.getcwd().replace('\\','/')
-SAFETIME=600
+SAFETIME=30*60
+RENEWTIME=30*60
 MAXSIZE=50*1024*1024
 MAXALLSIZE=250*1024*1024
 MAXLEN=20
@@ -146,7 +147,7 @@ class EZshare:
         item=self.datas.getfile(avid)
         if item:
             if item.dietime<time.time()+SAFETIME:
-                item.dietime+=900
+                item.dietime+=RENEWTIME
         raise cherrypy.HTTPRedirect('/')
 
     @cherrypy.expose()
@@ -190,10 +191,13 @@ class EZshare:
             cherrypy.session['control']=[a.fid for a in self.datas.files]
         raise cherrypy.HTTPRedirect('/')
 
-cherrypy.config.update({
-    'engine.autoreload.on':False,
-    'server.socket_host':'0.0.0.0',
-    'server.socket_port':7676,
-    'tools.sessions.on':True,
+cherrypy.quickstart(EZshare(),'',{
+    'global': {
+         'engine.autoreload.on':False,
+        'server.socket_host':'0.0.0.0',
+        'server.socket_port':7676,
+    },
+    '/': {
+        'tools.sessions.on':True,
+    },
 })
-cherrypy.quickstart(EZshare(),'')
