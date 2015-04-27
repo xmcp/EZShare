@@ -99,7 +99,7 @@
     <div class="well well-sm"><div class="row">
         <div class="col-sm-6"><div class="input-group">
             <span class="input-group-addon"><span class="glyphicon glyphicon-filter"></span></span>
-            <input class="form-control" name="avid" required="required" placeholder="AVID" autofocus="autofocus" tabindex="1000">
+            <input class="form-control" name="avid" required="required" placeholder="分享名称" autofocus="autofocus" tabindex="1000">
             <span class="input-group-btn">
                 <button type="button" class="btn btn-default"
                         onclick="alert('使用简短的词语描述你分享的文件。\n不能包含除下划线、横杠外的特殊符号。')">

@@ -42,7 +42,7 @@ class FS:
     def addfile(self,avid,filename,content,dietime,istext):
         for file in self.files:
             if file.avid==avid:
-                raise RuntimeError('AVID Exist.')
+                raise RuntimeError('Share ID Exist.')
         if len(self.files)==MAXLEN:
             self.size-=len(self.files[0].content)
             del self.files[0]
@@ -111,11 +111,11 @@ class EZshare:
         except Exception as e:
             return err('Invalid Time: %s'%e)
         if self.datas.getfile(avid):
-            return err('AVID Exist.')
+            return err('Share ID Exist.')
         if dietime-time.time()>(24*60*60):
             return err('Time Too Long.')
         if not avid.replace('_','').replace('-','').isalnum():
-            return err('Invalid AVID.')
+            return err('Invalid Share ID.')
         if file=='yes':
             try:
                 filename=upfile.filename
