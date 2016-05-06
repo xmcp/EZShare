@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<%!
+    import time
+    import math
+    def friendly_size(b): # copied from progressbar/widgets.py
+        format='%6.2f%sB'
+        prefixes=' kMGTPEZY'
+
+        power=int(math.log(b, 1000))
+        scaled=b/1000.**power
+        return format%(scaled, prefixes[power])
+%>
+<html lang="zh-cn">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>EZShare</title>
+    <link rel="stylesheet" href="/static/bootstrap/css/bootstrap.min.css">
+    <script src="/static/bootstrap/js/jquery.min.js"></script>
+    <script src="/static/bootstrap/js/bootstrap.min.js"></script>
+    <!--[if lt IE 9]>
+      <script src="//cdn.bootcss.com/html5shiv/3.7.2/html5shiv.min.js"></script>
+      <script src="//cdn.bootcss.com/respond.js/1.4.2/respond.min.js"></script>
+    <![endif]-->
+    <style>
+        body.dragged .well-sm {
+            background-color: #ccf;;
+        }
+        body.dragged #drag-hint {
+            display: none;
+        }
+    </style>
+    <script>
+        $(function() {
+            var $uploader=$('#uploader'), $prog=$('#prog');
+
+            $('#dropper')
+                .on('dragenter',function() {$('body').addClass('dragged');})
+                .on('dragleave',function() {$('body').removeClass('dragged');})
+                .on('dragover',function(event) {event.preventDefault();})
+                .on('drop',function(event) {
+                    event.preventDefault();
+                    $('body').removeClass('dragged');
+                    upload_content(event.originalEvent.dataTransfer.files[0]);
+                });
+
+            $uploader.change(function (){
+                upload_content(document.getElementById('uploader').files[0]);
+            });
+
+            function upload_content(fil) {
+                function progress_callback(event) {
+                    var percent=event.loaded*100/event.total;
+                    $prog.width(percent+'%');
+                }
+                function complete_callback(event) {
+                    if(event.target.responseText==="OK")
+                        window.location.reload(true);
+                    else
+                        document.write(event.target.responseText);
+                }
+                function failed_callback() {
+                    $uploader.removeAttr('disabled');
+                    alert('上传失败');
+                }
+                function cancel_callback() {
+                    $uploader.removeAttr('disabled');
+                }
+                var xhr=new XMLHttpRequest(),
+                    fd=new FormData();
+                fd.append("upfile",fil);
+                fd.append("filename",fil.name);
+                xhr.upload.addEventListener("progress",progress_callback,false);
+                xhr.addEventListener("load",complete_callback,false);
+                xhr.addEventListener("error",failed_callback,false);
+                xhr.addEventListener("abort",cancel_callback,false);
+                xhr.open("post", "/upload");
+                $uploader.attr('disabled','disabled');
+
+                $prog.width(0);
+                $prog.parent().fadeIn();
+                xhr.send(fd);
+            }
+        });
+    </script>
+</head>
+<body><div class="container">
+    <br>
+    <div class="well well-sm" id="dropper">
+        <span class="text-info pull-right" id="drag-hint" style="line-height: 34px">拖动文件到此处</span>
+        <button type="button" class="btn btn-default" data-toggle="modal" data-target="#uptext-modal">
+            <span class="glyphicon glyphicon-edit"></span>
+            &nbsp;添加文本
+        </button>
+        <input type="file" class="btn btn-default" style="display:inline-block; height: 34px; padding-top:4px;" id="uploader">
+    </div>
+    <div class="progress" style="display: none">
+        <div class="progress-bar progress-bar-striped" id="prog"></div>
+    </div>
+    <br>
+    % if not files:
+        <div class="alert alert-info">
+            <span class="glyphicon glyphicon-inbox"></span>
+            &nbsp;没有共享的文件
+        </div>
+    % endif
+    <ul class="list-group">
+        % for file in files:
+            <div class="list-group-item" onclick="location.href='/download/${file['uuid']|u}'" style="line-height: 34px"><div class="row">
+                <div class="col-sm-7">
+                    <span class="pull-right">${friendly_size(file['size'])}</span>
+                    <span class="glyphicon glyphicon-${'align-left' if file['istext'] else 'file'}"></span><!-- todo: text icon -->
+                    &nbsp;${file['filename']|h}
+                </div>
+                <div class="col-sm-3">
+                    ${time.strftime('%Y-%m-%d %H:%M:%S',time.localtime(file['time']))|h}
+                </div>
+                <div class="col-sm-2">
+                    <div class="btn-group">
+                        <a href="/download/${file['uuid']|u}?force_download=1" target="_blank" class="btn btn-default">
+                            <span class="glyphicon glyphicon-save"></span>
+                            &nbsp;下载
+                        </a>
+                        <a href="/delete/${file['uuid']|u}" class="btn btn-danger">
+                            <span class="glyphicon glyphicon-trash"></span>
+                            &nbsp;删除
+                        </a>
+                    </div>
+                </div>
+            </div></div>
+        % endfor
+    </ul>
+
+    <!-- upload text -->
+    <div class="modal fade" id="uptext-modal" tabindex="-1"><div class="modal-dialog modal-lg"><div class="modal-content">
+        <form method="post" action="/uptext">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal"><span>&times;</span></button>
+                <h4 class="modal-title">添加文本</h4>
+            </div>
+            <div class="modal-body">
+                    <textarea name="content" class="form-control" style="width: 100%; height: 300px;" placeholder="输入文本……"></textarea>
+            </div>
+            <div class="modal-footer">
+                <button type="submit" class="btn btn-primary">上传</button>
+            </div>
+        </form>
+    </div></div></div>
+</div></body>
+</html>
