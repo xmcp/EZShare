@@ -86,7 +86,7 @@ cherrypy.quickstart(Website(),'/',{
         'engine.autoreload.on':False,
         # 'request.show_tracebacks': False,
         'server.socket_host':'0.0.0.0',
-        'server.socket_port':80,
+        'server.socket_port':os.environ.get('PORT',80),
         'server.thread_pool':10,
     },
     '/': {
