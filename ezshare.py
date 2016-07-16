@@ -4,14 +4,14 @@ import os
 import cherrypy
 from mako.template import Template
 import uuid
-import time
+import datetime, pytz
 
 class File:
     def __init__(self,filename,content):
         self.size=len(content)
         self.filename=filename
         self.uuid=uuid.uuid4().hex
-        self.time=time.time()
+        self.time=datetime.datetime.now(tz=pytz.timezone('Asia/Shanghai'))
         self.content=content
 
 
@@ -21,7 +21,7 @@ class Website:
     @cherrypy.expose()
     def index(self):
         def _getfiles():
-            for file in sorted(self.FS.values(),key=lambda x:-x.time):
+            for file in sorted(self.FS.values(),key=lambda x:x.time,reverse=True):
                 yield {
                     'filename': file.filename,
                     'size': file.size,

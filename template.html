@@ -142,7 +142,7 @@
                             &nbsp;删除
                         </button>
                     </div>
-                    ${time.strftime('%m-%d &nbsp;%H:%M:%S',time.localtime(file['time']))}
+                    ${file['time'].strftime('%m-%d &nbsp;%H:%M:%S')}
                 </div>
             </a>
         % endfor
