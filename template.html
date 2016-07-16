@@ -23,14 +23,17 @@
       <script src="//cdn.bootcss.com/respond.js/1.4.2/respond.min.js"></script>
     <![endif]-->
     <style>
-        #dropper {
+        body {
             transition: background-color .2s ease-out;
         }
-        #dropper.dragged {
+        body.dragged {
             background-color: #bbf;
         }
-        #dropper.dragged * {
+        body.dragged * {
             display: none;
+        }
+        body.dragged #dropper {
+            display: block !important;
         }
         .fullsize {
             height: 100% !important;
@@ -43,12 +46,12 @@
             window.uploading=false;
 
             $dropper
-                .on('dragenter',function() {$dropper.addClass('dragged');})
-                .on('dragleave',function() {$dropper.removeClass('dragged');})
+                .on('dragenter',function() {$('body').addClass('dragged');})
+                .on('dragleave',function() {$('body').removeClass('dragged');})
                 .on('dragover',function(event) {event.preventDefault();})
                 .on('drop',function(event) {
                     event.preventDefault();
-                    $dropper.removeClass('dragged');
+                    $('body').removeClass('dragged');
                     upload_content(event.originalEvent.dataTransfer.files[0]);
                 });
 
