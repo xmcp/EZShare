@@ -3,14 +3,14 @@
     import time
     import math
     def friendly_size(b): # copied from progressbar/widgets.py
-        format='%6.2f%sB'
-        prefixes=' kMGTPEZY'
+        format='%6.2f %sB'
+        prefixes=' KMGTPEZY'
 
         power=int(math.log(b, 1000))
         scaled=b/1000.**power
         return format%(scaled, prefixes[power])
 %>
-<html lang="zh-cn">
+<html lang="zh-cn" class="fullsize">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -23,24 +23,32 @@
       <script src="//cdn.bootcss.com/respond.js/1.4.2/respond.min.js"></script>
     <![endif]-->
     <style>
-        body.dragged .well-sm {
-            background-color: #ccf;;
+        #dropper {
+            transition: background-color .2s ease-out;
         }
-        body.dragged #drag-hint {
+        #dropper.dragged {
+            background-color: #bbf;
+        }
+        #dropper.dragged * {
             display: none;
+        }
+        .fullsize {
+            height: 100% !important;
+            overflow-y: auto;
         }
     </style>
     <script>
         $(function() {
-            var $uploader=$('#uploader'), $prog=$('#prog');
+            var $uploader=$('#uploader'), $prog=$('#prog'), $dropper=$('#dropper');
+            window.uploading=false;
 
-            $('#dropper')
-                .on('dragenter',function() {$('body').addClass('dragged');})
-                .on('dragleave',function() {$('body').removeClass('dragged');})
+            $dropper
+                .on('dragenter',function() {$dropper.addClass('dragged');})
+                .on('dragleave',function() {$dropper.removeClass('dragged');})
                 .on('dragover',function(event) {event.preventDefault();})
                 .on('drop',function(event) {
                     event.preventDefault();
-                    $('body').removeClass('dragged');
+                    $dropper.removeClass('dragged');
                     upload_content(event.originalEvent.dataTransfer.files[0]);
                 });
 
@@ -49,6 +57,10 @@
             });
 
             function upload_content(fil) {
+                if(window.uploading)
+                    return alert('不能同时上传多个文件！');
+                window.uploading=true;
+
                 function progress_callback(event) {
                     var percent=event.loaded*100/event.total;
                     $prog.width(percent+'%');
@@ -61,10 +73,12 @@
                 }
                 function failed_callback() {
                     $uploader.removeAttr('disabled');
+                    window.uploading=false;
                     alert('上传失败');
                 }
                 function cancel_callback() {
                     $uploader.removeAttr('disabled');
+                    window.uploading=false;
                 }
                 var xhr=new XMLHttpRequest(),
                     fd=new FormData();
@@ -84,18 +98,21 @@
         });
     </script>
 </head>
-<body><div class="container">
+<body class="fullsize"><div class="fullsize container" id="dropper">
     <br>
-    <div class="well well-sm" id="dropper">
-        <span class="text-info pull-right" id="drag-hint" style="line-height: 34px">拖动文件到此处</span>
+    <div class="well well-sm">
+        <span class="text-info pull-right" style="line-height: 34px">
+            <span class="glyphicon glyphicon-import"></span>
+            &nbsp;支持拖拽上传
+        </span>
         <button type="button" class="btn btn-default" data-toggle="modal" data-target="#uptext-modal">
             <span class="glyphicon glyphicon-edit"></span>
-            &nbsp;添加文本
+            <span class="hidden-xs">&nbsp;添加文本</span>
         </button>
-        <input type="file" class="btn btn-default" style="display:inline-block; height: 34px; padding-top:4px;" id="uploader">
+        <input type="file" class="btn btn-default" style="display:inline-block; height: 34px; padding-top:4px; width: 225px;" id="uploader">
     </div>
     <div class="progress" style="display: none">
-        <div class="progress-bar progress-bar-striped" id="prog"></div>
+        <div class="progress-bar progress-bar-striped active" id="prog"></div>
     </div>
     <br>
     % if not files:
@@ -106,28 +123,28 @@
     % endif
     <ul class="list-group">
         % for file in files:
-            <div class="list-group-item" onclick="location.href='/download/${file['uuid']|u}'" style="line-height: 34px"><div class="row">
+            <a class="list-group-item row" href="/download/${file['uuid']|u}/${file['filename']|u}" style="line-height: 34px">
                 <div class="col-sm-7">
                     <span class="pull-right">${friendly_size(file['size'])}</span>
-                    <span class="glyphicon glyphicon-${'align-left' if file['istext'] else 'file'}"></span><!-- todo: text icon -->
+                    <span class="glyphicon glyphicon-file"></span><!-- todo: text icon -->
                     &nbsp;${file['filename']|h}
                 </div>
-                <div class="col-sm-3">
-                    ${time.strftime('%Y-%m-%d %H:%M:%S',time.localtime(file['time']))|h}
-                </div>
-                <div class="col-sm-2">
-                    <div class="btn-group">
-                        <a href="/download/${file['uuid']|u}?force_download=1" target="_blank" class="btn btn-default">
+                <div class="col-sm-5">
+                    <div class="btn-group pull-right">
+                        <button class="btn btn-default"
+                               onclick="event.preventDefault(); location.href='/download/${file['uuid']|u}/${file['filename']|u}?force_download=1'">
                             <span class="glyphicon glyphicon-save"></span>
                             &nbsp;下载
-                        </a>
-                        <a href="/delete/${file['uuid']|u}" class="btn btn-danger">
+                        </button>
+                        <button class="btn btn-danger"
+                                onclick="event.preventDefault(); if(confirm('删除文件？')) location.href='/delete/${file['uuid']|u}'">
                             <span class="glyphicon glyphicon-trash"></span>
                             &nbsp;删除
-                        </a>
+                        </button>
                     </div>
+                    ${time.strftime('%m-%d &nbsp;%H:%M:%S',time.localtime(file['time']))}
                 </div>
-            </div></div>
+            </a>
         % endfor
     </ul>
 

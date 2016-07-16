@@ -13,12 +13,6 @@ class File:
         self.uuid=uuid.uuid4().hex
         self.time=time.time()
         self.content=content
-        try:
-            self.content.decode('utf-8')
-        except UnicodeDecodeError:
-            self.istext=False
-        else:
-            self.istext=True
 
 
 class Website:
@@ -27,29 +21,26 @@ class Website:
     @cherrypy.expose()
     def index(self):
         def _getfiles():
-            ret=[]
             for file in sorted(self.FS.values(),key=lambda x:-x.time):
-                ret.append({
+                yield {
                     'filename': file.filename,
                     'size': file.size,
                     'uuid': file.uuid,
                     'time': file.time,
-                    'istext': file.istext,
-                })
-            return ret
+                }
 
         return Template(filename='template.html',input_encoding='utf-8',output_encoding='utf-8')\
-            .render(files=_getfiles())
+            .render(files=list(_getfiles()))
 
     @cherrypy.expose()
-    def download(self,fileid,force_download=None):
+    def download(self,fileid,_=None,force_download=False):
         if fileid in self.FS:
             file=self.FS[fileid]
-            if file.istext and not force_download:
-                cherrypy.response.headers['Content-Type']='text/plain'
-            else:
+            if force_download:
                 cherrypy.response.headers['Content-Type']='application/x-download'
-                cherrypy.response.headers['Content-Disposition']='attachment; filename="%s"'%file.filename
+            else:
+                cherrypy.response.headers['Content-Type']='text/plain'
+
             return file.content
         else:
             raise cherrypy.NotFound()
@@ -66,7 +57,7 @@ class Website:
     @cherrypy.expose()
     def uptext(self,content):
         newfile=File(
-            filename='EZShare-Document.txt',
+            filename='Document.txt',
             content=content.encode('utf-8'),
         )
         self.FS[newfile.uuid]=newfile
@@ -88,6 +79,7 @@ cherrypy.quickstart(Website(),'/',{
         'server.socket_host':'0.0.0.0',
         'server.socket_port':int(os.environ.get('PORT',80)),
         'server.thread_pool':10,
+        'server.max_request_body_size': 0, #no limit
     },
     '/': {
         'tools.gzip.on': True,
