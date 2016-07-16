@@ -59,7 +59,6 @@
             function upload_content(fil) {
                 if(window.uploading)
                     return alert('不能同时上传多个文件！');
-                window.uploading=true;
 
                 function progress_callback(event) {
                     var percent=event.loaded*100/event.total;
@@ -93,6 +92,7 @@
 
                 $prog.width(0);
                 $prog.parent().fadeIn();
+                window.uploading=true;
                 xhr.send(fd);
             }
         });
