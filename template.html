@@ -3,6 +3,8 @@
     import time
     import math
     def friendly_size(b): # copied from progressbar/widgets.py
+        if not b:
+            return '0 B'
         format='%6.2f %sB'
         prefixes=' KMGTPEZY'
 
