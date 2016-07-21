@@ -94,7 +94,7 @@
                     if(event.target.responseText==="OK") {
                         upload_q.splice(0,1);
                         $prog.width('100%');
-                        $('.filelabel:nth-child(2)').fadeOut(200,function(){
+                        $('.filelabel:nth-child(2)').fadeOut(150,function(){
                             $(this).remove();
                             upload_content(); //upload other files
                         })
@@ -190,6 +190,11 @@
             &nbsp;没有共享的文件
         </div>
     % endif
+
+    <br>
+    <span class="pull-right text-info">
+        <a href="https://github.com/xmcp/ezshare" target="_blank">EZShare by @xmcp</a
+    </span>
 
     <!-- upload text -->
     <div class="modal fade" id="uptext-modal" tabindex="-1"><div class="modal-dialog modal-lg"><div class="modal-content">
