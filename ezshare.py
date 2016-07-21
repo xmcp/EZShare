@@ -64,12 +64,15 @@ class Website:
         raise cherrypy.HTTPRedirect('/')
 
     @cherrypy.expose()
-    def delete(self,fileid):
-        if fileid in self.FS:
+    def delete(self,fileid=None):
+        if fileid and fileid in self.FS:
             del self.FS[fileid]
             raise cherrypy.HTTPRedirect('/')
-        else:
+        elif fileid is not None:
             raise cherrypy.NotFound()
+        else:
+            self.FS.clear()
+            raise cherrypy.HTTPRedirect('/')
 
 
 cherrypy.quickstart(Website(),'/',{
