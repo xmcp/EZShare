@@ -1,10 +1,12 @@
 #coding=utf-8
-import os
 
 import cherrypy
 from mako.template import Template
+
+import os
 import uuid
 import datetime, pytz
+import io
 
 class File:
     def __init__(self,filename,content):
@@ -14,6 +16,7 @@ class File:
         self.time=datetime.datetime.now(tz=pytz.timezone('Asia/Shanghai'))
         self.content=content
 
+DOWNLOAD_CHUNK=8*1024*1024
 
 class Website:
     FS={}
@@ -34,14 +37,22 @@ class Website:
 
     @cherrypy.expose()
     def download(self,fileid,_=None,force_download=False):
+        def stream():
+            data=obj.read(DOWNLOAD_CHUNK)
+            while data:
+                yield data
+                data=obj.read(DOWNLOAD_CHUNK)
+    
         if fileid in self.FS:
             file=self.FS[fileid]
-            if force_download:
-                cherrypy.response.headers['Content-Type']='application/x-download'
+            try:
+                obj=io.BytesIO(file.content)
+            except MemoryError:
+                return '内存不足，文件无法下载'
             else:
-                cherrypy.response.headers['Content-Type']='text/plain'
-
-            return file.content
+                cherrypy.response.headers['Content-Length']=file.size
+                cherrypy.response.headers['Content-Type']='application/x-download' if force_download else 'text/plain'
+                return stream()
         else:
             raise cherrypy.NotFound()
 
@@ -91,4 +102,7 @@ cherrypy.quickstart(Website(),'/',{
         'tools.staticdir.on':True,
         'tools.staticdir.dir':os.path.join(os.getcwd(),'static'),
     },
+    '/download': {
+        'response.stream': True,
+    }
 })
