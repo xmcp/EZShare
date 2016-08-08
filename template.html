@@ -48,9 +48,15 @@
         .progress-bar {
             transition-duration: .25s !important;
         }
+        .list-group {
+            padding-left: 15px;
+            padding-right: 15px;
+        }
     </style>
     <script>
         $(function() {
+            $('[data-toggle="tooltip"]').tooltip();
+
             var $uploader=$('#uploader'), $prog=$(null), $dropper=$('#dropper'), $faded_box=$('#faded-box'), $progress_parent=$('#progress-parent');
             window.upload_q=[];
             window.uploading=false;
@@ -158,7 +164,19 @@
             <a class="list-group-item row" href="/download/${file['uuid']|u}/${file['filename']|u}" style="line-height: 34px">
                 <div class="col-sm-7">
                     <span class="pull-right">${friendly_size(file['size'])}</span>
-                    <span class="glyphicon glyphicon-file"></span><!-- todo: text icon -->
+                    % if file['persistent']:
+                        <button type="button" class="btn btn-xs btn-success"
+                                onclick="event.preventDefault(); location.href='/persistent/${file['uuid']|u}'"
+                                data-toggle="tooltip" data-placement="top" title="不再永久保存？">
+                            <span class="glyphicon glyphicon-hdd"></span> 永久
+                        </button>
+                    % else:
+                        <button type="button" class="btn btn-xs btn-default"
+                                onclick="event.preventDefault(); location.href='/persistent/${file['uuid']|u}'"
+                                data-toggle="tooltip" data-placement="top" title="永久保存此文件？">
+                            <span class="glyphicon glyphicon-leaf"></span> 临时
+                        </button>
+                    % endif
                     &nbsp;${file['filename']|h}
                 </div>
                 <div class="col-sm-5">
@@ -168,7 +186,7 @@
                             <span class="glyphicon glyphicon-save"></span>
                             &nbsp;下载
                         </button>
-                        <button class="btn btn-danger"
+                        <button class="btn btn-danger" ${'disabled="disabled"' if file['persistent'] else ''}
                                 onclick="event.preventDefault(); if(confirm('删除文件？')) location.href='/delete/${file['uuid']|u}'">
                             <span class="glyphicon glyphicon-trash"></span>
                             &nbsp;删除
@@ -182,19 +200,23 @@
     % if files:
         <button class="btn btn-default btn-lg" onclick="if(confirm('所有文件都将会被删除！')) location.href='/delete'" style="width: 100%">
             <span class="glyphicon glyphicon-fire"></span>
-            &nbsp;清空全部文件
+            &nbsp;清空全部临时分享文件
         </button>
+        <br>
     % else:
         <div class="alert alert-info">
             <span class="glyphicon glyphicon-inbox"></span>
-            &nbsp;没有共享的文件
+            &nbsp;没有共享的文件，点击 “同步” 按钮从数据库下载之前的永久文件
         </div>
     % endif
 
     <br>
-    <span class="pull-right text-info">
-        <a href="https://github.com/xmcp/ezshare" target="_blank">EZShare by @xmcp</a
-    </span>
+    <div class="pull-right text-info">
+        <a href="https://github.com/xmcp/ezshare" target="_blank">EZShare by @xmcp</a>
+    </div>
+    <a href="/sync" class="btn btn-sm btn-default">
+        <span class="glyphicon glyphicon-refresh"></span> 同步
+    </a>
 
     <!-- upload text -->
     <div class="modal fade" id="uptext-modal" tabindex="-1"><div class="modal-dialog modal-lg"><div class="modal-content">

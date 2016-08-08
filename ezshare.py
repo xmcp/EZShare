@@ -4,22 +4,16 @@ import cherrypy
 from mako.template import Template
 
 import os
-import uuid
-import datetime, pytz
 import io
 
-class File:
-    def __init__(self,filename,content):
-        self.size=len(content)
-        self.filename=filename
-        self.uuid=uuid.uuid4().hex
-        self.time=datetime.datetime.now(tz=pytz.timezone('Asia/Shanghai'))
-        self.content=content
+from persistent import Database, File
 
 DOWNLOAD_CHUNK=8*1024*1024
 
 class Website:
-    FS={}
+    def __init__(self):
+        self.FS={}
+        self.DB=Database(self.FS)
 
     @cherrypy.expose()
     def index(self):
@@ -30,6 +24,7 @@ class Website:
                     'size': file.size,
                     'uuid': file.uuid,
                     'time': file.time,
+                    'persistent': file.persistent,
                 }
 
         return Template(filename='template.html',input_encoding='utf-8',output_encoding='utf-8')\
@@ -85,24 +80,42 @@ class Website:
             self.FS.clear()
             raise cherrypy.HTTPRedirect('/')
 
+    @cherrypy.expose()
+    def sync(self):
+        self.DB.sync()
+        raise cherrypy.HTTPRedirect('/')
 
-cherrypy.quickstart(Website(),'/',{
-    'global': {
-        'engine.autoreload.on':False,
-        # 'request.show_tracebacks': False,
-        'server.socket_host':'0.0.0.0',
-        'server.socket_port':int(os.environ.get('PORT',80)),
-        'server.thread_pool':10,
-        'server.max_request_body_size': 0, #no limit
-    },
-    '/': {
-        'tools.gzip.on': True,
-    },
-    '/static': {
-        'tools.staticdir.on':True,
-        'tools.staticdir.dir':os.path.join(os.getcwd(),'static'),
-    },
-    '/download': {
-        'response.stream': True,
-    }
-})
+    @cherrypy.expose()
+    def persistent(self,fileid):
+        file=self.FS.get(fileid)
+        if file:
+            if file.persistent:
+                if not self.DB.remove(file):
+                    raise cherrypy.NotFound()
+            else:
+                self.DB.upload(file)
+            raise cherrypy.HTTPRedirect('/')
+        else:
+            raise cherrypy.NotFound()
+
+if __name__=='__main__':
+    cherrypy.quickstart(Website(),'/',{
+        'global': {
+            'engine.autoreload.on':False,
+            # 'request.show_tracebacks': False,
+            'server.socket_host':'0.0.0.0',
+            'server.socket_port':int(os.environ.get('PORT',80)),
+            'server.thread_pool':10,
+            'server.max_request_body_size': 0, #no limit
+        },
+        '/': {
+            'tools.gzip.on': True,
+        },
+        '/static': {
+            'tools.staticdir.on':True,
+            'tools.staticdir.dir':os.path.join(os.getcwd(),'static'),
+        },
+        '/download': {
+            'response.stream': True,
+        }
+    })
