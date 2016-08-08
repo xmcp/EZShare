@@ -28,7 +28,7 @@ class Website:
                 }
 
         return Template(filename='template.html',input_encoding='utf-8',output_encoding='utf-8')\
-            .render(files=list(_getfiles()))
+            .render(files=list(_getfiles()),persistent=bool(self.DB.connect_param))
 
     @cherrypy.expose()
     def download(self,fileid,_=None,force_download=False):
@@ -100,24 +100,26 @@ class Website:
         else:
             raise cherrypy.NotFound()
 
-if __name__=='__main__':
-    cherrypy.quickstart(Website(),'/',{
-        'global': {
-            'engine.autoreload.on':False,
-            # 'request.show_tracebacks': False,
-            'server.socket_host':'0.0.0.0',
-            'server.socket_port':int(os.environ.get('PORT',80)),
-            'server.thread_pool':10,
-            'server.max_request_body_size': 0, #no limit
-        },
-        '/': {
-            'tools.gzip.on': True,
-        },
-        '/static': {
-            'tools.staticdir.on':True,
-            'tools.staticdir.dir':os.path.join(os.getcwd(),'static'),
-        },
-        '/download': {
-            'response.stream': True,
-        }
-    })
+cherrypy.quickstart(Website(),'/',{
+    'global': {
+        'engine.autoreload.on':False,
+        # 'request.show_tracebacks': False,
+        'server.socket_host':'0.0.0.0',
+        'server.socket_port':int(os.environ.get('PORT',80)),
+        'server.thread_pool':10,
+        'server.max_request_body_size': 0, #no limit
+    },
+    '/': {
+        'tools.gzip.on': True,
+    },
+    '/static': {
+        'tools.staticdir.on':True,
+        'tools.staticdir.dir':os.path.join(os.getcwd(),'static'),
+        'tools.response_headers.headers': [
+            ('Cache-Control','max-age=86400'),
+        ],
+    },
+    '/download': {
+        'response.stream': True,
+    }
+})

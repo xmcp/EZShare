@@ -52,6 +52,13 @@
             padding-left: 15px;
             padding-right: 15px;
         }
+        .syncbtn {
+            opacity: .25;
+            transition: opacity .2s;
+        }
+        .syncbtn:hover, .syncbtn:focus {
+            opacity: 1 !important;
+        }
     </style>
     <script>
         $(function() {
@@ -169,7 +176,7 @@
                                 data-toggle="tooltip" data-placement="top" title="不再永久保存？">
                             <span class="glyphicon glyphicon-hdd"></span> 永久
                         </button>
-                    % else:
+                    % elif persistent:
                         <button type="button" class="btn btn-xs btn-default"
                                 onclick="event.preventDefault(); location.href='/persistent/${file['uuid']|u}'"
                                 data-toggle="tooltip" data-placement="top" title="永久保存此文件？">
@@ -212,13 +219,16 @@
     <div class="pull-right text-info">
         <a href="https://github.com/xmcp/ezshare" target="_blank">EZShare by @xmcp</a>
     </div>
-    <a href="/sync" class="btn btn-sm btn-default">
-        <span class="glyphicon glyphicon-refresh"></span> 同步
-        % if not files:
-            <span class="text-primary">（恢复之前上传的永久文件）</span>
-        % endif
-    </a>
-
+    % if persistent:
+        <a href="/sync" class="btn btn-sm btn-default syncbtn">
+            <span class="glyphicon glyphicon-refresh"></span> 数据库同步
+        </a>
+    % else:
+        <button type="button" class="btn btn-sm btn-default" disabled="disabled">
+            <span class="glyphicon glyphicon-ban-circle"></span> 持久化模式已禁用
+        </button>
+    % endif
+        
     <!-- upload text -->
     <div class="modal fade" id="uptext-modal" tabindex="-1"><div class="modal-dialog modal-lg"><div class="modal-content">
         <form method="post" action="/uptext">

@@ -1,7 +1,17 @@
 #coding=utf-8
+"""
+-- PostgreSQL DDL
+CREATE TABLE storage (
+   filename     text          NOT NULL,
+   id           uuid          NOT NULL,
+   upload_time  timestamptz   NOT NULL,
+   content      bytea         NOT NULL
+);
+ALTER TABLE public.storage ADD CONSTRAINT storage_pkey PRIMARY KEY (id);
+CREATE UNIQUE INDEX storage_id_uindex ON storage USING btree (id);
+"""
 
 import os
-from contextlib import closing
 import psycopg2
 import urllib.parse
 import uuid
@@ -20,16 +30,23 @@ class File:
 
 class Database:
     def __init__(self,fs):
-        url=urllib.parse.urlparse(os.environ.get('DATABASE_URL','postgres://localhost/'))
-        self.connect_param=dict(
-            database=url.path[1:],
-            user=url.username,
-            password=url.password,
-            host=url.hostname,
-            port=url.port
-        )
         self._cache={}
         self._fs=fs
+        if 'DATABASE_URL' in os.environ:
+            url=urllib.parse.urlparse(os.environ['DATABASE_URL'])
+            self.connect_param=dict(
+                database=url.path[1:],
+                user=url.username,
+                password=url.password,
+                host=url.hostname,
+                port=url.port
+            )
+            print('=== Initializing persistent database...')
+            self.sync()
+            print('=== Done. %d objects fetched.'%len(self._fs))
+        else:
+            print('=== DATABASE_URL not set. Persistence mode disabled.')
+            self.connect_param={}
 
     def _getdb(self):
         return psycopg2.connect(**self.connect_param)
@@ -37,6 +54,7 @@ class Database:
     def _download(self,db,files):
         if not files:
             return
+        print('=== Downloading %d untracked files...'%len(files))
         cur=db.cursor()
         cur.execute('select id,content from storage where id in %s',[tuple(files)])
         for uuid_,content in cur.fetchall():
@@ -46,7 +64,7 @@ class Database:
         cur=db.cursor()
         cur.execute('select id,filename,upload_time from storage')
         items=cur.fetchall()
-        self._download(db,[x[0] for x in items if x[0] not in self._cache])
+        self._download(db,[uuid.UUID(x[0]).hex for x in items if uuid.UUID(x[0]).hex not in self._cache])
         for file in self._fs.values(): #refresh persistent status
             file.persistent=False
         for uuid_,fn,time in items:
