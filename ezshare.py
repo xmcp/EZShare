@@ -77,7 +77,9 @@ class Website:
         elif fileid is not None:
             raise cherrypy.NotFound()
         else:
-            self.FS.clear()
+            for fileid in list(self.FS):
+                if not self.FS[fileid].persistent:
+                    del self.FS[fileid]
             raise cherrypy.HTTPRedirect('/')
 
     @cherrypy.expose()

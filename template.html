@@ -158,7 +158,6 @@
         <div class="progress" id="progress-parent"></div>
     </div>
 
-    <br>
     <ul class="list-group">
         % for file in files:
             <a class="list-group-item row" href="/download/${file['uuid']|u}/${file['filename']|u}" style="line-height: 34px">
@@ -198,24 +197,26 @@
         % endfor
     </ul>
     % if files:
-        <button class="btn btn-default btn-lg" onclick="if(confirm('所有文件都将会被删除！')) location.href='/delete'" style="width: 100%">
+        <button class="btn btn-default btn-lg" onclick="if(confirm('所有标有“临时”文件都将会被删除！')) location.href='/delete'" style="width: 100%">
             <span class="glyphicon glyphicon-fire"></span>
-            &nbsp;清空全部临时分享文件
+            &nbsp;清空临时分享的文件
         </button>
-        <br>
+        <br><br>
     % else:
         <div class="alert alert-info">
             <span class="glyphicon glyphicon-inbox"></span>
-            &nbsp;没有共享的文件，点击 “同步” 按钮从数据库下载之前的永久文件
+            &nbsp;没有共享的文件
         </div>
     % endif
 
-    <br>
     <div class="pull-right text-info">
         <a href="https://github.com/xmcp/ezshare" target="_blank">EZShare by @xmcp</a>
     </div>
     <a href="/sync" class="btn btn-sm btn-default">
         <span class="glyphicon glyphicon-refresh"></span> 同步
+        % if not files:
+            <span class="text-primary">（恢复之前上传的永久文件）</span>
+        % endif
     </a>
 
     <!-- upload text -->
