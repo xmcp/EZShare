@@ -51,7 +51,9 @@
                             <span class="glyphicon glyphicon-trash"></span>
                         </button>
                     </div>
-                    ${file['time'].strftime('<b>%m-%d</b> &nbsp;%H:%M:%S')}
+                    ## http://stackoverflow.com/questions/16034060/python3-datetime-datetime-strftime-failed-to-accept-utf-8-string-format
+                    ## http://stackoverflow.com/questions/904928/python-strftime-date-without-leading-0
+                    ${file['time'].strftime('<b>%m{0}%d{1}</b> &nbsp;%H:%M:%S').replace('>0','>').format('月','日')}
                 </div>
             </a>
         % endfor
@@ -85,6 +87,9 @@
         }
         .filelabel:nth-child(2):before {
             content: "正在上传 "
+        }
+        .filelabel:nth-child(2):after {
+            content: " ……"
         }
         .progress-bar {
             transition-duration: .25s !important;
@@ -191,6 +196,8 @@
                 $progress_parent.append('<div class="progress-bar progress-bar-striped active" id="prog"></div>');
                 $prog=$('#prog').width(0);
                 $faded_box.fadeIn();
+                $('.js-disable-when-upload').css({'pointer-events':'none','opacity':'.25'});
+                $('#uptext-modal').modal('hide');
                 window.uploading=true;
                 xhr.send(fd);
             }
@@ -211,7 +218,7 @@
             <span class="glyphicon glyphicon-import"></span>
             &nbsp;支持拖拽上传
         </span>
-        <button type="button" class="btn btn-default" data-toggle="modal" data-target="#uptext-modal">
+        <button type="button" class="btn btn-default js-disable-when-upload" data-toggle="modal" data-target="#uptext-modal">
             <span class="glyphicon glyphicon-edit"></span>
             <span class="hidden-xs">&nbsp;添加文本</span>
         </button>
@@ -233,19 +240,21 @@
             else:
                 new_files.append(file)
     %>
-    ${self.show_files(new_files)}
-    % if old_files:
-        <div class="panel panel-default">
-            <div class="panel-heading" href="#old_files" data-toggle="collapse">
-                <span class="pull-right badge">${len(old_files)}</span>
-                <span class="glyphicon glyphicon-folder-open"></span>
-                &nbsp; 更早的文件……
+    <div class="js-disable-when-upload">
+        ${self.show_files(new_files)}
+        % if old_files:
+            <div class="panel panel-default">
+                <div class="panel-heading" onclick="$('#old_files').collapse('toggle')">
+                    <span class="pull-right badge">${len(old_files)}</span>
+                    <span class="glyphicon glyphicon-menu-down"></span>
+                    &nbsp; 更早的文件
+                </div>
+                <div class="panel-collapse collapse" id="old_files">
+                    ${self.show_files(old_files)}
+                </div>
             </div>
-            <div class="panel-collapse collapse" id="old_files">
-                ${self.show_files(old_files)}
-            </div>
-        </div>
-    % endif
+        % endif
+    </div>
     % if not files:
         <div class="alert alert-info">
             <span class="glyphicon glyphicon-inbox"></span>
@@ -253,15 +262,15 @@
         </div>
     % endif
 
-    <div class="pull-right text-info">
+    <div class="pull-right text-info js-disable-when-upload">
         <a href="https://github.com/xmcp/ezshare" target="_blank">EZShare by @xmcp</a>
     </div>
-    <button class="btn btn-default btn-sm" onclick="if(confirm('所有标有“临时”文件都将会被删除！')) location.href='/delete'">
+    <button class="btn btn-default btn-sm js-disable-when-upload" onclick="if(confirm('所有标有“临时”文件都将会被删除！')) location.href='/delete'">
         <span class="glyphicon glyphicon-fire"></span>
         &nbsp;清空临时分享的文件
     </button>
     % if persistent:
-        <a href="/sync" class="btn btn-sm btn-default syncbtn">
+        <a href="/sync" class="btn btn-sm btn-default syncbtn js-disable-when-upload">
             <span class="glyphicon glyphicon-refresh"></span> 数据库同步
         </a>
     % else:
@@ -269,10 +278,11 @@
             <span class="glyphicon glyphicon-ban-circle"></span> 持久化模式已禁用
         </button>
     % endif
+    <br><br>
         
     <!-- upload text -->
     <div class="modal fade" id="uptext-modal" tabindex="-1"><div class="modal-dialog modal-lg"><div class="modal-content">
-        <form method="post" action="/uptext">
+        <form class="form-inline" method="post" action="/uptext">
             <div class="modal-header">
                 <button type="button" class="close" data-dismiss="modal"><span>&times;</span></button>
                 <h4 class="modal-title">添加文本</h4>
@@ -281,6 +291,7 @@
                     <textarea name="content" class="form-control" style="width: 100%; height: 300px;" placeholder="输入文本……"></textarea>
             </div>
             <div class="modal-footer">
+                <input type="text" name="filename" class="form-control" placeholder="Document.txt" style="font-family: Consolas, monospace">
                 <button type="submit" class="btn btn-primary">上传</button>
             </div>
         </form>

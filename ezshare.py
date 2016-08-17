@@ -46,7 +46,7 @@ class Website:
                 return '内存不足，文件无法下载'
             else:
                 cherrypy.response.headers['Content-Length']=file.size
-                cherrypy.response.headers['Content-Type']='application/x-download' if force_download else 'text/plain'
+                cherrypy.response.headers['Content-Type']='application/x-download' if force_download else 'text/plain; charset=utf-8'
                 return stream()
         else:
             raise cherrypy.NotFound()
@@ -61,9 +61,9 @@ class Website:
         return 'OK'
 
     @cherrypy.expose()
-    def uptext(self,content):
+    def uptext(self,content,filename=None):
         newfile=File(
-            filename='Document.txt',
+            filename=filename or 'Document.txt',
             content=content.encode('utf-8'),
         )
         self.FS[newfile.uuid]=newfile
