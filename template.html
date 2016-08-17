@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <%!
-    import time
+    from persistent import TIMEZONE
+    import datetime
     import math
     def friendly_size(b): # copied from progressbar/widgets.py
         if not b:
@@ -12,7 +13,52 @@
         scaled=b/1000.**power
         return format%(scaled, prefixes[power])
 %>
-<html lang="zh-cn" class="fullsize">
+
+<%def name='show_files(files)'>
+    <ul class="list-group">
+        % for file in files:
+            <a class="list-group-item row" href="/download/${file['uuid']|u}/${file['filename']|u}" style="line-height: 34px">
+                <div class="col-sm-7">
+                    <span class="pull-right">${friendly_size(file['size'])}</span>
+                    % if file['persistent']:
+                        <button type="button" class="btn btn-xs btn-success"
+                                onclick="event.preventDefault(); location.href='/persistent/${file['uuid']|u}'"
+                                data-toggle="tooltip" data-placement="top" title="不再永久保存？">
+                            <span class="glyphicon glyphicon-hdd"></span> 永久
+                        </button>
+                    % elif persistent:
+                        <button type="button" class="btn btn-xs btn-default"
+                                onclick="event.preventDefault(); location.href='/persistent/${file['uuid']|u}'"
+                                data-toggle="tooltip" data-placement="top" title="永久保存此文件？">
+                            <span class="glyphicon glyphicon-leaf"></span> 临时
+                        </button>
+                    % endif
+                    &nbsp; <b>${file['filename']|h}</b>
+                </div>
+                <div class="col-sm-5">
+                    <div class="btn-group pull-right">
+                        <button class="btn btn-primary"
+                               onclick="event.preventDefault(); location.href='/download/${file['uuid']|u}/${file['filename']|u}?force_download=1'">
+                            <span class="glyphicon glyphicon-save"></span>
+                            <span class="hidden-sm">&nbsp;下载</span>
+                        </button>
+                        <button class="btn btn-default" ${'disabled="disabled"' if file['persistent'] else ''}
+                                onclick="event.preventDefault(); rename('${file['uuid']}','${file['filename']|u}')">
+                            <span class="glyphicon glyphicon-pencil"></span>
+                        </button>
+                        <button class="btn btn-danger" ${'disabled="disabled"' if file['persistent'] else ''}
+                                onclick="event.preventDefault(); if(confirm('删除文件？')) location.href='/delete/${file['uuid']|u}'">
+                            <span class="glyphicon glyphicon-trash"></span>
+                        </button>
+                    </div>
+                    ${file['time'].strftime('<b>%m-%d</b> &nbsp;%H:%M:%S')}
+                </div>
+            </a>
+        % endfor
+    </ul>
+</%def>
+
+<html lang="zh-cn">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -26,20 +72,11 @@
     <![endif]-->
     <style>
         body {
-            transition: background-color .2s ease-out;
+            transition: background-color .2s ease-out, opacity .2s ease-out;
         }
         body.dragged {
             background-color: #bbf;
-        }
-        body.dragged * {
-            display: none;
-        }
-        body.dragged #dropper {
-            display: block !important;
-        }
-        .fullsize {
-            height: 100% !important;
-            overflow-y: auto;
+            opacity: .2;
         }
         .filelabel {
             font-size: 1.2em;
@@ -71,6 +108,7 @@
             var $uploader=$('#uploader'), $prog=$(null), $dropper=$('#dropper'), $faded_box=$('#faded-box'), $progress_parent=$('#progress-parent');
             window.upload_q=[];
             window.uploading=false;
+            window.drag_counter=0;
 
             function push_q(file) {
                 upload_q.push(file);
@@ -83,11 +121,20 @@
             }
 
             $dropper
-                .on('dragenter',function() {$('body').addClass('dragged');})
-                .on('dragleave',function() {$('body').removeClass('dragged');})
+                .on('dragenter',function() {
+                    window.drag_counter++;
+                    if(drag_counter===1)
+                        $('body').addClass('dragged');
+                })
+                .on('dragleave',function() {
+                    window.drag_counter--;
+                    if(drag_counter===0)
+                        $('body').removeClass('dragged');
+                })
                 .on('dragover',function(event) {event.preventDefault();})
                 .on('drop',function(event) {
                     event.preventDefault();
+                    window.drag_counter=0;
                     $('body').removeClass('dragged');
                     for(var i=0;i<event.originalEvent.dataTransfer.files.length;i++)
                         push_q(event.originalEvent.dataTransfer.files[i]);
@@ -147,10 +194,16 @@
                 window.uploading=true;
                 xhr.send(fd);
             }
+
+            window.rename=function(uuid,oldname) {
+                var fn=prompt('重命名：',decodeURIComponent(oldname));
+                if(fn)
+                    location.href='/rename/'+uuid+'/'+encodeURIComponent(fn);
+            }
         });
     </script>
 </head>
-<body class="fullsize"><div class="fullsize container" id="dropper">
+<body><div class="container" id="dropper">
     <br>
 
     <div class="well well-sm">
@@ -169,51 +222,31 @@
         <div class="progress" id="progress-parent"></div>
     </div>
 
-    <ul class="list-group">
-        % for file in files:
-            <a class="list-group-item row" href="/download/${file['uuid']|u}/${file['filename']|u}" style="line-height: 34px">
-                <div class="col-sm-7">
-                    <span class="pull-right">${friendly_size(file['size'])}</span>
-                    % if file['persistent']:
-                        <button type="button" class="btn btn-xs btn-success"
-                                onclick="event.preventDefault(); location.href='/persistent/${file['uuid']|u}'"
-                                data-toggle="tooltip" data-placement="top" title="不再永久保存？">
-                            <span class="glyphicon glyphicon-hdd"></span> 永久
-                        </button>
-                    % elif persistent:
-                        <button type="button" class="btn btn-xs btn-default"
-                                onclick="event.preventDefault(); location.href='/persistent/${file['uuid']|u}'"
-                                data-toggle="tooltip" data-placement="top" title="永久保存此文件？">
-                            <span class="glyphicon glyphicon-leaf"></span> 临时
-                        </button>
-                    % endif
-                    &nbsp;${file['filename']|h}
-                </div>
-                <div class="col-sm-5">
-                    <div class="btn-group pull-right">
-                        <button class="btn btn-default"
-                               onclick="event.preventDefault(); location.href='/download/${file['uuid']|u}/${file['filename']|u}?force_download=1'">
-                            <span class="glyphicon glyphicon-save"></span>
-                            &nbsp;下载
-                        </button>
-                        <button class="btn btn-danger" ${'disabled="disabled"' if file['persistent'] else ''}
-                                onclick="event.preventDefault(); if(confirm('删除文件？')) location.href='/delete/${file['uuid']|u}'">
-                            <span class="glyphicon glyphicon-trash"></span>
-                            &nbsp;删除
-                        </button>
-                    </div>
-                    ${file['time'].strftime('%m-%d &nbsp;%H:%M:%S')}
-                </div>
-            </a>
-        % endfor
-    </ul>
-    % if files:
-        <button class="btn btn-default btn-lg" onclick="if(confirm('所有标有“临时”文件都将会被删除！')) location.href='/delete'" style="width: 100%">
-            <span class="glyphicon glyphicon-fire"></span>
-            &nbsp;清空临时分享的文件
-        </button>
-        <br><br>
-    % else:
+    <%
+        curtime=datetime.datetime.now(tz=TIMEZONE)
+        threshold=datetime.timedelta(days=1)
+        old_files=[]
+        new_files=[]
+        for file in sorted(files,key=lambda x:x['time'],reverse=True):
+            if curtime-file['time']>threshold:
+                old_files.append(file)
+            else:
+                new_files.append(file)
+    %>
+    ${self.show_files(new_files)}
+    % if old_files:
+        <div class="panel panel-default">
+            <div class="panel-heading" href="#old_files" data-toggle="collapse">
+                <span class="pull-right badge">${len(old_files)}</span>
+                <span class="glyphicon glyphicon-folder-open"></span>
+                &nbsp; 更早的文件……
+            </div>
+            <div class="panel-collapse collapse" id="old_files">
+                ${self.show_files(old_files)}
+            </div>
+        </div>
+    % endif
+    % if not files:
         <div class="alert alert-info">
             <span class="glyphicon glyphicon-inbox"></span>
             &nbsp;没有共享的文件
@@ -223,6 +256,10 @@
     <div class="pull-right text-info">
         <a href="https://github.com/xmcp/ezshare" target="_blank">EZShare by @xmcp</a>
     </div>
+    <button class="btn btn-default btn-sm" onclick="if(confirm('所有标有“临时”文件都将会被删除！')) location.href='/delete'">
+        <span class="glyphicon glyphicon-fire"></span>
+        &nbsp;清空临时分享的文件
+    </button>
     % if persistent:
         <a href="/sync" class="btn btn-sm btn-default syncbtn">
             <span class="glyphicon glyphicon-refresh"></span> 数据库同步

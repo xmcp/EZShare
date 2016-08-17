@@ -83,6 +83,14 @@ class Website:
             raise cherrypy.HTTPRedirect('/')
 
     @cherrypy.expose()
+    def rename(self,fileid,filename):
+        if fileid in self.FS:
+            self.FS[fileid].filename=filename
+            raise cherrypy.HTTPRedirect('/')
+        else:
+            raise cherrypy.NotFound()
+
+    @cherrypy.expose()
     def sync(self):
         self.DB.sync()
         raise cherrypy.HTTPRedirect('/')
