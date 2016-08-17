@@ -69,7 +69,13 @@ class Database:
             file.persistent=False
         for uuid_,fn,time in items:
             uuid_=uuid.UUID(uuid_).hex
-            self._fs[uuid_]=File(fn,self._cache.get(uuid_,'PERSISTENT ITEM NOT FOUND.'),uuid_,time,True)
+            self._fs[uuid_]=File(
+                fn,
+                self._cache.get(uuid_,'PERSISTENT ITEM NOT FOUND.'),
+                uuid_,
+                time+datetime.timedelta(hours=8),
+                True
+            )
 
     def upload(self,file:File):
         with self._getdb() as db:
