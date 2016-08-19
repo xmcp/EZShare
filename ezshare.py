@@ -123,6 +123,7 @@ cherrypy.quickstart(Website(),'/',{
     },
     '/': {
         'tools.gzip.on': True,
+        'tools.response_headers.on':True,
     },
     '/static': {
         'tools.staticdir.on':True,
