@@ -73,12 +73,15 @@
       <script src="//cdn.bootcss.com/respond.js/1.4.2/respond.min.js"></script>
     <![endif]-->
     <style>
+        html {
+            min-height: 100%;
+        }
         body {
             transition: background-color .2s ease-out, opacity .2s ease-out;
         }
         body.dragged {
             background-color: #bbf;
-            opacity: .2;
+            opacity: .15;
         }
         .filelabel {
             font-size: 1.2em;
@@ -110,7 +113,7 @@
         $(function() {
             $('[data-toggle="tooltip"]').tooltip();
 
-            var $uploader=$('#uploader'), $prog=$(null), $dropper=$('#dropper'), $faded_box=$('#faded-box'), $progress_parent=$('#progress-parent');
+            var $uploader=$('#uploader'), $prog=$(null), $dropper=$('html'), $faded_box=$('#faded-box'), $progress_parent=$('#progress-parent');
             window.upload_q=[];
             window.uploading=false;
             window.drag_counter=0;
@@ -210,9 +213,9 @@
         });
     </script>
 </head>
-<body><div class="container" id="dropper">
+<body><div class="container">
     <br>
-
+    
     <div class="well well-sm">
         <span class="text-info pull-right" style="line-height: 34px">
             <span class="glyphicon glyphicon-import"></span>
