@@ -95,6 +95,13 @@ class Database:
             file.persistent=False
             return cur.rowcount>0
 
+    def rename(self,file:File,filename):
+        with self._getdb() as db:
+            cur=db.cursor()
+            cur.execute('update storage set filename=%s where id=%s',[filename,file.uuid])
+            self._sync(db)
+            
     def sync(self):
         with self._getdb() as db:
             self._sync(db)
+            

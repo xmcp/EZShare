@@ -42,7 +42,7 @@
                             <span class="glyphicon glyphicon-save"></span>
                             <span class="hidden-sm">&nbsp;下载</span>
                         </button>
-                        <button class="btn btn-default" ${'disabled="disabled"' if file['persistent'] else ''}
+                        <button class="btn btn-default"
                                 onclick="event.preventDefault(); rename('${file['uuid']}','${file['filename']|u}')">
                             <span class="glyphicon glyphicon-pencil"></span>
                         </button>

@@ -84,8 +84,12 @@ class Website:
 
     @cherrypy.expose()
     def rename(self,fileid,filename):
-        if fileid in self.FS:
-            self.FS[fileid].filename=filename
+        file=self.FS.get(fileid)
+        if file:
+            if file.persistent:
+                self.DB.rename(file,filename)
+            else:
+                file.filename=filename
             raise cherrypy.HTTPRedirect('/')
         else:
             raise cherrypy.NotFound()
