@@ -77,11 +77,12 @@ class Database:
         for uuid_,fn,time in items:
             uuid_=uuid.UUID(uuid_).hex
             self._fs[uuid_]=File(
-                fn,
-                self._cache.get(uuid_,'PERSISTENT ITEM NOT FOUND.'),
-                uuid_,
-                (time+datetime.timedelta(hours=8)).replace(tzinfo=TIMEZONE),
-                True
+                filename=fn,
+                content=self._cache.get(uuid_,'PERSISTENT ITEM NOT FOUND.'),
+                uuid_=uuid_,
+                time_=(time+datetime.timedelta(hours=8)).replace(tzinfo=TIMEZONE),
+                persistent=True,
+                charset=self._fs[uuid_].charset if uuid_ in self._fs else -1
             )
 
     def upload(self,file:File):
