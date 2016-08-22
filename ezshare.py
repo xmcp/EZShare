@@ -10,6 +10,18 @@ from persistent import Database, File
 
 DOWNLOAD_CHUNK=8*1024*1024
 
+def set_content_type():
+    header=(b'Content-Type',cherrypy.response._content_type.encode())
+    
+    for ind,(key,_) in enumerate(cherrypy.response.header_list):
+        if key.lower()==b'content-type':
+            cherrypy.response.header_list[ind]=header
+            break
+    else:
+        cherrypy.response.header_list.append(header)
+        
+cherrypy.tools.set_content_type=cherrypy.Tool('on_end_resource',set_content_type)
+
 class Website:
     def __init__(self):
         self.FS={}
@@ -31,7 +43,9 @@ class Website:
             .render(files=list(_getfiles()),persistent=bool(self.DB.connect_param))
 
     @cherrypy.expose()
+    @cherrypy.tools.set_content_type()
     def download(self,fileid,_=None,force_download=False):
+        cherrypy.response._content_type='text/html'
         def stream():
             data=obj.read(DOWNLOAD_CHUNK)
             while data:
@@ -46,7 +60,13 @@ class Website:
                 return '内存不足，文件无法下载'
             else:
                 cherrypy.response.headers['Content-Length']=file.size
-                cherrypy.response.headers['Content-Type']='application/x-download' if force_download else 'text/plain; charset=utf-8'
+                print('!!!!!',file.charset)
+                if force_download:
+                    cherrypy.response._content_type='application/x-download'
+                elif file.charset:
+                    cherrypy.response._content_type='text/plain; charset=%s'%file.charset
+                else:
+                    cherrypy.response._content_type='text/plain'
                 return stream()
         else:
             raise cherrypy.NotFound()

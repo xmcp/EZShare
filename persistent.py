@@ -16,18 +16,24 @@ import psycopg2
 import urllib.parse
 import uuid
 import datetime, pytz
+import cchardet as chardet
 
 urllib.parse.uses_netloc.append('postgres')
 TIMEZONE=pytz.timezone('Asia/Shanghai')
 
 class File:
-    def __init__(self,filename,content,uuid_=None,time_=None,persistent=False):
+    def __init__(self,filename,content,uuid_=None,time_=None,persistent=False,charset=-1):
         self.size=len(content)
         self.filename=filename
         self.uuid=uuid_ or uuid.uuid4().hex
         self.time=time_ if time_ else datetime.datetime.now(tz=TIMEZONE)
         self.content=content
         self.persistent=persistent
+        if charset==-1:
+            result=chardet.detect(self.content)
+            self.charset=result['encoding'] if result['confidence']>=.6 else None
+        else:
+            self.charset=charset
 
 class Database:
     def __init__(self,fs):
