@@ -2,3 +2,4 @@ cherrypy
 mako
 pytz
 psycopg2
+cchardet
