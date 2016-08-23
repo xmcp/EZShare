@@ -20,18 +20,20 @@
             <a class="list-group-item row" href="/download/${file['uuid']|u}/${file['filename']|u}" style="line-height: 34px">
                 <div class="col-sm-7">
                     <span class="pull-right">${friendly_size(file['size'])}</span>
-                    % if file['persistent']:
-                        <button type="button" class="btn btn-xs btn-success"
-                                onclick="event.preventDefault(); location.href='/persistent/${file['uuid']|u}'"
-                                data-toggle="tooltip" data-placement="top" title="不再永久保存？">
-                            <span class="glyphicon glyphicon-hdd"></span> 永久
-                        </button>
-                    % elif persistent:
-                        <button type="button" class="btn btn-xs btn-default"
-                                onclick="event.preventDefault(); location.href='/persistent/${file['uuid']|u}'"
-                                data-toggle="tooltip" data-placement="top" title="永久保存此文件？">
-                            <span class="glyphicon glyphicon-leaf"></span> 临时
-                        </button>
+                    % if authed:
+                        % if file['persistent']:
+                            <button type="button" class="btn btn-xs btn-success"
+                                    onclick="event.preventDefault(); location.href='/persistent/${file['uuid']|u}'"
+                                    data-toggle="tooltip" data-placement="top" title="不再永久保存？">
+                                <span class="glyphicon glyphicon-hdd"></span> 永久
+                            </button>
+                        % elif persistent:
+                            <button type="button" class="btn btn-xs btn-default"
+                                    onclick="event.preventDefault(); location.href='/persistent/${file['uuid']|u}'"
+                                    data-toggle="tooltip" data-placement="top" title="永久保存此文件？">
+                                <span class="glyphicon glyphicon-leaf"></span> 临时
+                            </button>
+                        % endif
                     % endif
                     &nbsp; <b>${file['filename']|h}</b>
                 </div>
@@ -48,7 +50,7 @@
                         </button>
                         <button class="btn btn-danger" ${'disabled="disabled"' if file['persistent'] else ''}
                                 onclick="event.preventDefault(); if(confirm('删除文件？')) location.href='/delete/${file['uuid']|u}'">
-                            <span class="glyphicon glyphicon-trash"></span>
+                            <span class="glyphicon glyphicon-${'lock' if file['persistent'] else 'trash'}"></span>
                         </button>
                     </div>
                     ## http://stackoverflow.com/questions/16034060/python3-datetime-datetime-strftime-failed-to-accept-utf-8-string-format
@@ -209,7 +211,13 @@
                 var fn=prompt('重命名：',decodeURIComponent(oldname));
                 if(fn)
                     location.href='/rename/'+uuid+'/'+encodeURIComponent(fn);
-            }
+            };
+
+            window.auth=function() {
+                var pw=prompt('开启新世界的大门：');
+                if(pw)
+                    location.href='/auth/'+encodeURIComponent(pw);
+            };
         });
     </script>
 </head>
@@ -268,11 +276,15 @@
     <div class="pull-right text-info js-disable-when-upload">
         <a href="https://github.com/xmcp/ezshare" target="_blank">EZShare by @xmcp</a>
     </div>
-    <button class="btn btn-default btn-sm js-disable-when-upload" onclick="if(confirm('所有标有“临时”文件都将会被删除！')) location.href='/delete'">
+    <button class="btn btn-default btn-sm js-disable-when-upload" onclick="if(confirm('所有临时分享都将被删除！')) location.href='/delete'">
         <span class="glyphicon glyphicon-fire"></span>
         &nbsp;清空临时分享的文件
     </button>
-    % if persistent:
+    % if not authed:
+        <button type="button" class="btn btn-sm btn-primary" onclick="auth()">
+            <span class="glyphicon glyphicon-log-in"></span> 持久化模式授权
+        </button>
+    % elif persistent:
         <a href="/sync" class="btn btn-sm btn-default syncbtn js-disable-when-upload">
             <span class="glyphicon glyphicon-refresh"></span> 数据库同步
         </a>

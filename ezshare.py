@@ -2,13 +2,13 @@
 
 import cherrypy
 from mako.template import Template
-
 import os
 import io
 
 from persistent import Database, File
 
 DOWNLOAD_CHUNK=8*1024*1024
+PASSWORD=os.environ.get('EZSHARE_AUTH')
 
 class Website:
     def __init__(self):
@@ -27,8 +27,17 @@ class Website:
                     'persistent': file.persistent,
                 }
 
-        return Template(filename='template.html',input_encoding='utf-8',output_encoding='utf-8')\
-            .render(files=list(_getfiles()),persistent=bool(self.DB.connect_param))
+        return Template(filename='template.html',input_encoding='utf-8',output_encoding='utf-8').render(
+            files=list(_getfiles()),
+            persistent=bool(self.DB.connect_param),
+            authed=PASSWORD is None or 'auth' in cherrypy.session
+        )
+
+    @cherrypy.expose()
+    def auth(self,password):
+        if PASSWORD is None or password==PASSWORD:
+            cherrypy.session['auth']=True
+        raise cherrypy.HTTPRedirect('/')
 
     @cherrypy.expose()
     def download(self,fileid,_=None,force_download=False):
@@ -101,6 +110,8 @@ class Website:
 
     @cherrypy.expose()
     def persistent(self,fileid):
+        if PASSWORD is not None and 'auth' not in cherrypy.session:
+            raise cherrypy.NotFound()
         file=self.FS.get(fileid)
         if file:
             if file.persistent:
@@ -115,15 +126,15 @@ class Website:
 cherrypy.quickstart(Website(),'/',{
     'global': {
         'engine.autoreload.on':False,
-        # 'request.show_tracebacks': False,
         'server.socket_host':'0.0.0.0',
         'server.socket_port':int(os.environ.get('PORT',80)),
-        'server.thread_pool':10,
         'server.max_request_body_size': 0, #no limit
     },
     '/': {
         'tools.gzip.on': True,
         'tools.response_headers.on':True,
+        'tools.sessions.on': True,
+        'tools.sessions.locking':'explicit',
     },
     '/static': {
         'tools.staticdir.on':True,
