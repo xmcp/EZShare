@@ -164,6 +164,7 @@ cherrypy.quickstart(Website(),'/',{
         ],
     },
     '/download': {
+        'tools.gzip.on': False, # it breaks content-length
         'response.stream': True,
     }
 })
