@@ -31,7 +31,7 @@ class File:
         self.persistent=persistent
         if charset==-1:
             result=chardet.detect(self.content)
-            self.charset=result['encoding'] if result['confidence']>=.6 else None
+            self.charset=result['encoding'] if result['confidence'] and result['confidence']>=.6 else None
         else:
             self.charset=charset
 
