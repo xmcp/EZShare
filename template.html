@@ -3,6 +3,7 @@
     from persistent import TIMEZONE
     import datetime
     import math
+    
     def friendly_size(b): # copied from progressbar/widgets.py
         if not b:
             return '0 B'
@@ -12,12 +13,15 @@
         power=int(math.log(b, 1000))
         scaled=b/1000.**power
         return format%(scaled, prefixes[power])
+    
+    def fixspace(x):
+        return x.replace('+',' ')
 %>
 
 <%def name='show_files(files)'>
     <ul class="list-group">
         % for file in files:
-            <a class="list-group-item row" href="/download/${file['uuid']|u}/${file['filename']|u}" style="line-height: 34px">
+            <a class="list-group-item row" href="/download/${file['uuid']|u}/${file['filename']|u,fixspace}" style="line-height: 34px">
                 <div class="col-sm-7">
                     <span class="pull-right">${friendly_size(file['size'])}</span>
                     % if authed:
@@ -40,12 +44,12 @@
                 <div class="col-sm-5">
                     <div class="btn-group pull-right">
                         <button class="btn btn-primary"
-                               onclick="event.preventDefault(); location.href='/download/${file['uuid']|u}/${file['filename']|u}?force_download=1'">
+                               onclick="event.preventDefault(); location.href='/download/${file['uuid']|u}/${file['filename']|u,fixspace}?force_download=1'">
                             <span class="glyphicon glyphicon-save"></span>
                             <span class="hidden-sm">&nbsp;下载</span>
                         </button>
                         <button class="btn btn-default"
-                                onclick="event.preventDefault(); rename('${file['uuid']}','${file['filename']|u}')">
+                                onclick="event.preventDefault(); rename('${file['uuid']}','${file['filename']|u,fixspace}')">
                             <span class="glyphicon glyphicon-pencil"></span>
                         </button>
                         <button class="btn btn-danger" ${'disabled="disabled"' if file['persistent'] else ''}
@@ -281,7 +285,7 @@
         &nbsp;清空临时分享的文件
     </button>
     % if not authed:
-        <button type="button" class="btn btn-sm btn-primary" onclick="auth()">
+        <button type="button" class="btn btn-sm btn-primary js-disable-when-upload" onclick="auth()">
             <span class="glyphicon glyphicon-log-in"></span> 持久化模式授权
         </button>
     % elif persistent:
