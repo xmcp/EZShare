@@ -147,7 +147,7 @@ cherrypy.quickstart(Website(),'/',{
     'global': {
         'engine.autoreload.on':False,
         'server.socket_host':'0.0.0.0',
-        'server.socket_port':int(os.environ.get('PORT',80)),
+        'server.socket_port':int(os.environ.get('PORT',os.environ.get('EZSHARE_PORT',80))),
         'server.max_request_body_size': 0, #no limit
     },
     '/': {
