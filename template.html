@@ -168,7 +168,7 @@
             });
             
             $authbox.keypress(function(event) {
-                if(event.keyCode===34)
+                if(event.keyCode===13)
                     location.href='/auth/'+encodeURIComponent($authbox.val());
             });
 
@@ -287,21 +287,26 @@
     <div class="pull-right text-info js-disable-when-upload">
         <a href="https://github.com/xmcp/ezshare" target="_blank">EZShare by @xmcp</a>
     </div>
-    <button class="btn btn-default btn-sm js-disable-when-upload" onclick="if(confirm('所有临时分享都将被删除！')) location.href='/delete'">
-        <span class="glyphicon glyphicon-fire"></span>
-        &nbsp;清空临时分享的文件
-    </button>
-    % if not authed:
-        <input type="password" class="form-control" id="auth-box" placeholder="持久化模式授权">
-    % elif persistent:
-        <a href="/sync" class="btn btn-sm btn-default syncbtn js-disable-when-upload">
-            <span class="glyphicon glyphicon-refresh"></span> 数据库同步
-        </a>
-    % else:
-        <button type="button" class="btn btn-sm btn-default" disabled="disabled">
-            <span class="glyphicon glyphicon-ban-circle"></span> 持久化模式已禁用
+    <div class="form-inline">
+        <button class="btn btn-default btn-sm js-disable-when-upload" onclick="if(confirm('所有临时分享都将被删除！')) location.href='/delete'">
+            <span class="glyphicon glyphicon-fire"></span>
+            &nbsp;清空临时分享的文件
         </button>
-    % endif
+        % if not authed:
+            <div class="input-group input-group-sm js-disable-when-upload">
+                <span class="input-group-addon"><span class="glyphicon glyphicon-hdd"></span></span>
+                <input type="password" class="form-control" id="auth-box" placeholder="管理密码" autofocus>
+            </div>
+        % elif persistent:
+            <a href="/sync" class="btn btn-sm btn-default syncbtn js-disable-when-upload">
+                <span class="glyphicon glyphicon-refresh"></span> 数据库同步
+            </a>
+        % else:
+            <button type="button" class="btn btn-sm btn-default" disabled="disabled">
+                <span class="glyphicon glyphicon-ban-circle"></span> 持久化模式已禁用
+            </button>
+        % endif
+    </div>
     <br><br>
         
     <!-- upload text -->
