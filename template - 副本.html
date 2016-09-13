@@ -122,12 +122,7 @@
         $(function() {
             $('[data-toggle="tooltip"]').tooltip();
 
-            var $uploader=$('#uploader'),
-                $prog=$(null),
-                $dropper=$('html'),
-                $faded_box=$('#faded-box'),
-                $progress_parent=$('#progress-parent'),
-                $authbox=$('#auth-box');
+            var $uploader=$('#uploader'), $prog=$(null), $dropper=$('html'), $faded_box=$('#faded-box'), $progress_parent=$('#progress-parent');
             window.upload_q=[];
             window.uploading=false;
             window.drag_counter=0;
@@ -165,11 +160,6 @@
             $uploader.change(function (){
                 for(var i=0;i<document.getElementById('uploader').files.length;i++)
                     push_q(document.getElementById('uploader').files[i]);
-            });
-            
-            $authbox.keypress(function(event) {
-                if(event.keyCode===34)
-                    location.href='/auth/'+encodeURIComponent($authbox.val());
             });
 
             function upload_content() {
@@ -228,6 +218,12 @@
                 var fn=prompt('重命名：',decodeURIComponent(oldname));
                 if(fn)
                     location.href='/rename/'+uuid+'/'+encodeURIComponent(fn);
+            };
+
+            window.auth=function() {
+                var pw=prompt('开启新世界的大门：');
+                if(pw)
+                    location.href='/auth/'+encodeURIComponent(pw);
             };
         });
     </script>
@@ -292,7 +288,7 @@
         &nbsp;清空临时分享的文件
     </button>
     % if not authed:
-        <input type="password" class="form-control" id="auth-box" placeholder="持久化模式授权">
+        <input type="text" class="form-control" id="auth-box" placeholder="持久化模式授权">
     % elif persistent:
         <a href="/sync" class="btn btn-sm btn-default syncbtn js-disable-when-upload">
             <span class="glyphicon glyphicon-refresh"></span> 数据库同步
