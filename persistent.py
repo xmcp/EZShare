@@ -17,7 +17,6 @@ import urllib.parse
 import uuid
 import datetime, pytz
 import cchardet as chardet
-from contextlib import closing
 
 urllib.parse.uses_netloc.append('postgres')
 TIMEZONE=pytz.timezone('Asia/Shanghai')
@@ -57,7 +56,7 @@ class Database:
             self.connect_param={}
 
     def _getdb(self):
-        return closing(psycopg2.connect(**self.connect_param))
+        return psycopg2.connect(**self.connect_param)
 
     def _download(self,db,files):
         if not files:
