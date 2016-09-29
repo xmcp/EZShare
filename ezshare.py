@@ -100,7 +100,7 @@ class Website:
 
     @cherrypy.expose()
     def delete(self,fileid=None):
-        if fileid and fileid in self.FS:
+        if fileid and fileid in self.FS and not self.FS[fileid].persistent:
             del self.FS[fileid]
             raise cherrypy.HTTPRedirect('/')
         elif fileid is not None:
@@ -116,6 +116,8 @@ class Website:
         file=self.FS.get(fileid)
         if file:
             if file.persistent:
+                if PASSWORD is not None and 'auth' not in cherrypy.session:
+                    raise cherrypy.NotFound()
                 self.DB.rename(file,filename)
             else:
                 file.filename=filename

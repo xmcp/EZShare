@@ -18,6 +18,15 @@
         return x.replace('+',' ')
 %>
 
+<%def name='friendly_name(name)'>
+    <%
+        *suc,suf=name.split('.')
+        if not suc:
+            suc,suf=[suf],''
+    %>
+    ${'.'.join(suc)|h} <span class="text-primary fn-suf">.${suf|h}</span>
+</%def>
+
 <%def name='show_files(files)'>
     <ul class="list-group">
         % for file in files:
@@ -39,7 +48,7 @@
                             </button>
                         % endif
                     % endif
-                    &nbsp; <b>${file['filename']|h}</b>
+                    &nbsp; <b>${friendly_name(file['filename'])}</b>
                 </div>
                 <div class="col-sm-5">
                     <div class="btn-group pull-right">
@@ -48,7 +57,7 @@
                             <span class="glyphicon glyphicon-save"></span>
                             <span class="hidden-sm">&nbsp;下载</span>
                         </button>
-                        <button class="btn btn-default"
+                        <button class="btn btn-default" ${'disabled="disabled"' if file['persistent'] and not authed else ''}
                                 onclick="event.preventDefault(); rename('${file['uuid']}','${file['filename']|u,fixspace}')">
                             <span class="glyphicon glyphicon-pencil"></span>
                         </button>
@@ -70,7 +79,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>EZShare</title>
+    <title>ezShare</title>
     <link rel="stylesheet" href="/static/bootstrap/css/bootstrap.min.css">
     <script src="/static/bootstrap/js/jquery.min.js"></script>
     <script src="/static/bootstrap/js/bootstrap.min.js"></script>
@@ -116,6 +125,9 @@
         }
         #auth-box {
             width: 100px;
+        }
+        .fn-suf {
+            font-size: 1.1em;
         }
     </style>
     <script>
@@ -285,7 +297,7 @@
     % endif
 
     <div class="pull-right text-info js-disable-when-upload">
-        <a href="https://github.com/xmcp/ezshare" target="_blank">EZShare by @xmcp</a>
+        <a href="https://github.com/xmcp/ezshare" target="_blank">ezShare by @xmcp</a>
     </div>
     <div class="form-inline">
         <button class="btn btn-default btn-sm js-disable-when-upload" onclick="if(confirm('所有临时分享都将被删除！')) location.href='/delete'">

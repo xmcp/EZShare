@@ -12,7 +12,6 @@ CREATE UNIQUE INDEX storage_id_uindex ON storage USING btree (id);
 """
 
 import os
-import psycopg2
 import urllib.parse
 import uuid
 import datetime, pytz
@@ -56,6 +55,7 @@ class Database:
             self.connect_param={}
 
     def _getdb(self):
+        import psycopg2
         return psycopg2.connect(**self.connect_param)
 
     def _download(self,db,files):
