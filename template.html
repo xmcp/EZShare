@@ -7,8 +7,8 @@
     def friendly_size(b): # copied from progressbar/widgets.py
         if not b:
             return '0 B'
-        format='%6.2f %sB'
-        prefixes=' KMGTPEZY'
+        format='%6.2f %s'
+        prefixes='BKMGTPEZY'
 
         power=int(math.log(b, 1000))
         scaled=b/1000.**power
