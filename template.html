@@ -24,7 +24,7 @@
         if not suc:
             suc,suf=[suf],''
     %>
-    ${'.'.join(suc)|h} <span class="text-primary fn-suf">.${suf|h}</span>
+    ${'.'.join(suc)|h} <span class="text-primary fn-suf">${suf|h}</span>
 </%def>
 
 <%def name='show_files(files)'>
@@ -35,20 +35,19 @@
                     <span class="pull-right">${friendly_size(file['size'])}</span>
                     % if authed:
                         % if file['persistent']:
-                            <button type="button" class="btn btn-xs btn-success"
-                                    onclick="event.preventDefault(); location.href='/persistent/${file['uuid']|u}'"
-                                    data-toggle="tooltip" data-placement="top" title="不再永久保存？">
-                                <span class="glyphicon glyphicon-hdd"></span> 永久
-                            </button>
+                            <span onclick="event.preventDefault(); location.href='/persistent/${file['uuid']|u}'"
+                                  data-toggle="tooltip" data-placement="top" title="不再永久保存？"
+                                  class="glyphicon glyphicon-hdd text-success">
+                            </span>
                         % elif persistent:
-                            <button type="button" class="btn btn-xs btn-default"
-                                    onclick="event.preventDefault(); location.href='/persistent/${file['uuid']|u}'"
-                                    data-toggle="tooltip" data-placement="top" title="永久保存此文件？">
-                                <span class="glyphicon glyphicon-leaf"></span> 临时
-                            </button>
+                            <span onclick="event.preventDefault(); location.href='/persistent/${file['uuid']|u}'"
+                                data-toggle="tooltip" data-placement="top" title="永久保存此文件？"
+                                class="glyphicon glyphicon-leaf text-danger">
+                            </span>
                         % endif
+                        &nbsp;
                     % endif
-                    &nbsp; <b>${friendly_name(file['filename'])}</b>
+                    <b>${friendly_name(file['filename'])}</b>
                 </div>
                 <div class="col-sm-5">
                     <div class="btn-group pull-right">
@@ -63,7 +62,7 @@
                         </button>
                         <button class="btn btn-danger" ${'disabled="disabled"' if file['persistent'] else ''}
                                 onclick="event.preventDefault(); if(confirm('删除文件？')) location.href='/delete/${file['uuid']|u}'">
-                            <span class="glyphicon glyphicon-${'lock' if file['persistent'] else 'trash'}"></span>
+                            <span class="glyphicon glyphicon-trash"></span>
                         </button>
                     </div>
                     ## http://stackoverflow.com/questions/16034060/python3-datetime-datetime-strftime-failed-to-accept-utf-8-string-format
@@ -129,8 +128,19 @@
         .fn-suf {
             font-size: 1.1em;
         }
+        .fn-suf:before {
+            content: ".";
+        }
+        .fn-suf:empty:before {
+            content: "" !important;
+        }
     </style>
     <script>
+        upload_q=[];
+        uploading=false;
+        drag_counter=0;
+        show_oldfiles=localStorage['show_oldfiles']==='true';
+
         $(function() {
             $('[data-toggle="tooltip"]').tooltip();
 
@@ -140,9 +150,6 @@
                 $faded_box=$('#faded-box'),
                 $progress_parent=$('#progress-parent'),
                 $authbox=$('#auth-box');
-            window.upload_q=[];
-            window.uploading=false;
-            window.drag_counter=0;
 
             function push_q(file) {
                 upload_q.push(file);
@@ -241,6 +248,12 @@
                 if(fn)
                     location.href='/rename/'+uuid+'/'+encodeURIComponent(fn);
             };
+
+            window.toggle_collapse=function() {
+                $('#old_files').collapse(
+                    (localStorage['show_oldfiles']=window.show_oldfiles=!show_oldfiles) ? 'show':'hide'
+                );
+            }
         });
     </script>
 </head>
@@ -265,7 +278,7 @@
 
     <%
         curtime=datetime.datetime.now(tz=TIMEZONE)
-        threshold=datetime.timedelta(days=1)
+        threshold=datetime.timedelta(days=2)
         old_files=[]
         new_files=[]
         for file in sorted(files,key=lambda x:x['time'],reverse=True):
@@ -278,14 +291,19 @@
         ${self.show_files(new_files)}
         % if old_files:
             <div class="panel panel-default">
-                <div class="panel-heading" onclick="$('#old_files').collapse('toggle')">
+                <div class="panel-heading" onclick="toggle_collapse()">
                     <span class="pull-right badge">${len(old_files)}</span>
                     <span class="glyphicon glyphicon-menu-down"></span>
                     &nbsp; 更早的文件
                 </div>
-                <div class="panel-collapse collapse" id="old_files">
+                <div class="panel-collapse collapse in hidden" id="old_files">
                     ${self.show_files(old_files)}
                 </div>
+                <script>
+                    if(!show_oldfiles)
+                        document.getElementById('old_files').classList.remove('in');
+                    document.getElementById('old_files').classList.remove('hidden');
+                </script>
             </div>
         % endif
     </div>

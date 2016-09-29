@@ -4,6 +4,7 @@ import cherrypy
 from mako.template import Template
 import os
 import io
+import mimetypes
 
 from persistent import Database, File
 
@@ -21,6 +22,15 @@ def set_content_type():
         cherrypy.response.header_list.append(header)
         
 cherrypy.tools.set_content_type=cherrypy.Tool('on_end_resource',set_content_type)
+
+def _proc_mimetype(fn,charset):
+    typ,_=mimetypes.guess_type(fn,False)
+    if typ is None and not charset:
+        return 'application/octet-stream'
+    else:
+        if typ is None or typ.startswith('text/'): #anti-xss
+            typ='text/plain'
+        return '%s; charset=%s'%(typ,charset) if charset else typ
 
 class Website:
     def __init__(self):
@@ -69,13 +79,10 @@ class Website:
                 return '内存不足，文件无法下载'
             else:
                 cherrypy.response.headers['Content-Length']=file.size
-                print('!!!!!',file.charset)
                 if force_download:
                     cherrypy.response._content_type='application/x-download'
-                elif file.charset:
-                    cherrypy.response._content_type='text/plain; charset=%s'%file.charset
                 else:
-                    cherrypy.response._content_type='text/plain'
+                    cherrypy.response._content_type=_proc_mimetype(file.filename,file.charset)
                 return stream()
         else:
             raise cherrypy.NotFound()
