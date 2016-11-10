@@ -32,6 +32,15 @@ def _proc_mimetype(fn,charset):
             typ='text/plain'
         return '%s; charset=%s'%(typ,charset) if charset else typ
 
+def extract_visitor():
+    orig_ip=cherrypy.request.remote.ip
+    return ('IP: %s\nUA: %s\nLang: %s\nReferer: %s'%(
+        cherrypy.request.headers['X-Real-IP'] if orig_ip=='127.0.0.1' and 'X-Real-IP' in cherrypy.request.headers else orig_ip,
+        cherrypy.request.headers.get('User-Agent'),
+        cherrypy.request.headers.get('Accept-Language'),
+        cherrypy.request.headers.get('Referer'),
+    )).split('\n')
+
 class Website:
     def __init__(self):
         self.FS={}
@@ -47,6 +56,7 @@ class Website:
                     'uuid': file.uuid,
                     'time': file.time,
                     'persistent': file.persistent,
+                    'uploader': file.uploader,
                 }
 
         return Template(filename='template.html',input_encoding='utf-8',output_encoding='utf-8').render(
@@ -92,15 +102,19 @@ class Website:
         newfile=File(
             filename=filename or upfile.filename,
             content=upfile.file.read(),
+            uploader=extract_visitor(),
         )
         self.FS[newfile.uuid]=newfile
         return 'OK'
 
     @cherrypy.expose()
-    def uptext(self,content,filename=None):
+    def uptext(self,content,captcha,filename=None):
+        if captcha!=r'\\\\':
+            raise cherrypy.HTTPRedirect('/')
         newfile=File(
             filename=filename or 'Document.txt',
             content=content.encode('utf-8'),
+            uploader=extract_visitor(),
         )
         self.FS[newfile.uuid]=newfile
         raise cherrypy.HTTPRedirect('/')
@@ -171,6 +185,10 @@ cherrypy.quickstart(Website(),'/',{
         'tools.response_headers.headers': [
             ('Cache-Control','max-age=86400'),
         ],
+    },
+    '/robots.txt': {
+        'tools.staticfile.on':True,
+        'tools.staticfile.filename':os.path.join(os.getcwd(),'static/robots.txt'),
     },
     '/download': {
         'tools.gzip.on': False, # it breaks content-length

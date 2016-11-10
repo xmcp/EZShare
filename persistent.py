@@ -21,13 +21,14 @@ urllib.parse.uses_netloc.append('postgres')
 TIMEZONE=pytz.timezone('Asia/Shanghai')
 
 class File:
-    def __init__(self,filename,content,uuid_=None,time_=None,persistent=False,charset=-1):
+    def __init__(self,filename,content,uuid_=None,time_=None,persistent=False,charset=-1,uploader=None):
         self.size=len(content)
         self.filename=filename
         self.uuid=uuid_ or uuid.uuid4().hex
         self.time=time_ if time_ else datetime.datetime.now(tz=TIMEZONE)
         self.content=content
         self.persistent=persistent
+        self.uploader=uploader
         if charset==-1:
             result=chardet.detect(self.content)
             self.charset=result['encoding'] if result['confidence'] and result['confidence']>=.6 else None
