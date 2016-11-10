@@ -81,7 +81,7 @@ class Database:
                 filename=fn,
                 content=self._cache.get(uuid_,b'EZSHARE INTERNAL ERROR: PERSISTENT ITEM NOT FOUND.'),
                 uuid_=uuid_,
-                time_=(time+datetime.timedelta(hours=8)).replace(tzinfo=TIMEZONE),
+                time_=time.astimezone(TIMEZONE),
                 persistent=True,
                 charset=self._fs[uuid_].charset if uuid_ in self._fs else -1
             )
