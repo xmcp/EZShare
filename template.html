@@ -28,7 +28,8 @@
         if not suc:
             suc,suf=[suf],''
     %>
-    ${'.'.join(suc)|h} <span class="text-primary fn-suf">${suf|h}</span>
+    ${'.'.join(suc)|h} <!--suppress PyNonAsciiChar -->
+    <span class="text-primary fn-suf">${suf|h}</span>
 </%def>
 
 <%def name='show_files(files)'>
@@ -36,7 +37,15 @@
         % for file in files:
             <a class="list-group-item row" href="/download/${file['uuid']|u}/${file['filename']|u,fixspace}" style="line-height: 34px">
                 <div class="col-sm-7">
-                    <span class="pull-right">${friendly_size(file['size'])}</span>
+                    <span class="pull-right">
+                        % if authed and file['uploader']:
+                            <span data-toggle="tooltip" data-placement="bottom" title="${mk_tooltip(file['uploader'])}"
+                                 data-html="true" class="glyphicon glyphicon-record tooltip-consolas text-primary">
+                            </span>
+                            &nbsp;
+                        % endif
+                        ${friendly_size(file['size'])}
+                    </span>
                     % if authed:
                         % if file['persistent']:
                             <span onclick="event.preventDefault(); location.href='/persistent/${file['uuid']|u}'"
@@ -49,10 +58,6 @@
                                 class="glyphicon glyphicon-leaf text-danger">
                             </span>
                         % endif
-                        &nbsp;
-                        <span data-toggle="tooltip" data-placement="right" title="${mk_tooltip(file['uploader'])}"
-                             data-html="true" class="glyphicon glyphicon-record tooltip-consolas text-success">
-                        </span>
                         &nbsp;
                     % endif
                     <b>${friendly_name(file['filename'])}</b>
@@ -70,7 +75,7 @@
                         </button>
                         <button class="btn btn-danger" ${'disabled="disabled"' if file['persistent'] else ''}
                                 onclick="event.preventDefault(); if(confirm('删除文件？')) location.href='/delete/${file['uuid']|u}'">
-                            <span class="glyphicon glyphicon-trash"></span>
+                            <span class="glyphicon glyphicon-${'ban-circle' if file['persistent'] else 'trash'}"></span>
                         </button>
                     </div>
                     ## http://stackoverflow.com/questions/16034060/python3-datetime-datetime-strftime-failed-to-accept-utf-8-string-format
@@ -157,6 +162,13 @@
 
         $(function() {
             $('[data-toggle="tooltip"]').tooltip();
+
+            % if authed:
+                $('#dragdrop-icon').click(function(event) {
+                    if(event.altKey)
+                        location.href='/show';
+                });
+            % endif
 
             var $uploader=$('#uploader'),
                 $prog=$(null),
@@ -272,11 +284,14 @@
     </script>
 </head>
 <body><div class="container">
+    <!--[if lt IE 10]>
+        <h2 style="color:red; background-color: yellow">您正在使用 IE 浏览器访问本站，这是不被推荐的。</h2>
+    <![endif]-->
     <br>
     
     <div class="well well-sm">
         <span class="text-info pull-right" style="line-height: 34px">
-            <span class="glyphicon glyphicon-import"></span>
+            <span class="glyphicon glyphicon-import" id="dragdrop-icon"></span>
             &nbsp;支持拖拽上传
         </span>
         <button type="button" class="btn btn-default js-disable-when-upload" data-toggle="modal" data-target="#uptext-modal">

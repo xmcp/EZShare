@@ -49,7 +49,12 @@ class Website:
     @cherrypy.expose()
     def index(self):
         def _getfiles():
-            for file in sorted(self.FS.values(),key=lambda x:x.time,reverse=True):
+            files=sorted(self.FS.values(),key=lambda x:x.time,reverse=True)
+            if 'hidden' in cherrypy.session:
+                del cherrypy.session['hidden']
+            else:
+                files=filter(lambda x:not x.filename.startswith('//'),files)
+            for file in files:
                 yield {
                     'filename': file.filename,
                     'size': file.size,
@@ -69,6 +74,12 @@ class Website:
     def auth(self,password):
         if PASSWORD is None or password==PASSWORD:
             cherrypy.session['auth']=True
+        raise cherrypy.HTTPRedirect('/')
+
+    @cherrypy.expose()
+    def show(self):
+        if PASSWORD is None or 'auth' in cherrypy.session:
+            cherrypy.session['hidden']=True
         raise cherrypy.HTTPRedirect('/')
 
     @cherrypy.expose()
