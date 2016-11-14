@@ -86,25 +86,15 @@ class Website:
     @cherrypy.tools.set_content_type()
     def download(self,fileid,_=None,force_download=False):
         cherrypy.response._content_type='text/html'
-        def stream():
-            data=obj.read(DOWNLOAD_CHUNK)
-            while data:
-                yield data
-                data=obj.read(DOWNLOAD_CHUNK)
     
         if fileid in self.FS:
             file=self.FS[fileid]
-            try:
-                obj=io.BytesIO(file.content)
-            except MemoryError:
-                return '内存不足，文件无法下载'
+            cherrypy.response.headers['Content-Length']=file.size
+            if force_download:
+                cherrypy.response._content_type='application/x-download'
             else:
-                cherrypy.response.headers['Content-Length']=file.size
-                if force_download:
-                    cherrypy.response._content_type='application/x-download'
-                else:
-                    cherrypy.response._content_type=_proc_mimetype(file.filename,file.charset)
-                return stream()
+                cherrypy.response._content_type=_proc_mimetype(file.filename,file.charset)
+            return file.content
         else:
             raise cherrypy.NotFound()
 
@@ -203,6 +193,6 @@ cherrypy.quickstart(Website(),'/',{
     },
     '/download': {
         'tools.gzip.on': False, # it breaks content-length
-        'response.stream': True,
+        #'response.stream': True,
     }
 })
