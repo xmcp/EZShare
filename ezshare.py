@@ -178,7 +178,8 @@ cherrypy.quickstart(Website(),'/',{
         'tools.gzip.on': True,
         'tools.response_headers.on':True,
         'tools.sessions.on': True,
-        'tools.sessions.locking':'explicit',
+        'tools.sessions.locking': 'explicit',
+        'tools.sessions.timeout': 1440,
     },
     '/static': {
         'tools.staticdir.on':True,
