@@ -1,11 +1,15 @@
 #coding=utf-8
 
+import socket
+print('Your IP address:  %s'%'  '.join(socket.gethostbyname_ex(socket.gethostname())[2]))
+print('Starting up ezShare server...')
+print('='*79)
+
 import cherrypy
 from mako.template import Template
 import os
 import io
 import mimetypes
-import socket # get self ip
 
 from persistent import Database, File
 
@@ -168,8 +172,6 @@ class Website:
         else:
             raise cherrypy.NotFound()
 
-print('Your IP address:  %s'%'  '.join(socket.gethostbyname_ex(socket.gethostname())[2]))
-print('='*79)
 cherrypy.quickstart(Website(),'/',{
     'global': {
         'engine.autoreload.on':False,
