@@ -1,10 +1,5 @@
 #coding=utf-8
 
-import socket
-print('Your IP address:  %s'%'  '.join(socket.gethostbyname_ex(socket.gethostname())[2]))
-print('Starting up ezShare server...')
-print('='*79)
-
 import cherrypy
 from mako.template import Template
 import os
@@ -172,33 +167,37 @@ class Website:
         else:
             raise cherrypy.NotFound()
 
-cherrypy.quickstart(Website(),'/',{
-    'global': {
-        'engine.autoreload.on':False,
-        'server.socket_host':'0.0.0.0',
-        'server.socket_port':int(os.environ.get('PORT',os.environ.get('EZSHARE_PORT',80))),
-        'server.max_request_body_size': 0, #no limit
-    },
-    '/': {
-        'tools.gzip.on': True,
-        'tools.response_headers.on':True,
-        'tools.sessions.on': True,
-        'tools.sessions.locking': 'explicit',
-        'tools.sessions.timeout': 1440,
-    },
-    '/static': {
-        'tools.staticdir.on':True,
-        'tools.staticdir.dir':os.path.join(os.getcwd(),'static'),
-        'tools.response_headers.headers': [
-            ('Cache-Control','max-age=86400'),
-        ],
-    },
-    '/robots.txt': {
-        'tools.staticfile.on':True,
-        'tools.staticfile.filename':os.path.join(os.getcwd(),'static/robots.txt'),
-    },
-    '/download': {
-        'tools.gzip.on': False, # it breaks content-length
-        #'response.stream': True,
-    }
-})
+def run(website):
+    cherrypy.quickstart(website,'/',{
+        'global': {
+            'engine.autoreload.on':False,
+            'server.socket_host':'0.0.0.0',
+            'server.socket_port':int(os.environ.get('PORT',os.environ.get('EZSHARE_PORT',80))),
+            'server.max_request_body_size': 0, #no limit
+        },
+        '/': {
+            'tools.gzip.on': True,
+            'tools.response_headers.on':True,
+            'tools.sessions.on': True,
+            'tools.sessions.locking': 'explicit',
+            'tools.sessions.timeout': 1440,
+        },
+        '/static': {
+            'tools.staticdir.on':True,
+            'tools.staticdir.dir':os.path.join(os.getcwd(),'static'),
+            'tools.response_headers.headers': [
+                ('Cache-Control','max-age=86400'),
+            ],
+        },
+        '/robots.txt': {
+            'tools.staticfile.on':True,
+            'tools.staticfile.filename':os.path.join(os.getcwd(),'static/robots.txt'),
+        },
+        '/download': {
+            'tools.gzip.on': False, # it breaks content-length
+            #'response.stream': True,
+        }
+    })
+
+if __name__=='__main__':
+    run(Website())
