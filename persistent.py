@@ -30,8 +30,11 @@ class File:
         self.persistent=persistent
         self.uploader=uploader
         if charset==-1:
-            result=chardet.detect(self.content)
-            self.charset=result['encoding'] if result['confidence'] and result['confidence']>=.6 else None
+            if self.size>=256*1024:
+                self.charset='utf-8'
+            else:
+                result=chardet.detect(self.content)
+                self.charset=result['encoding'] if result['confidence'] and result['confidence']>=.6 else None
         else:
             self.charset=charset
 
